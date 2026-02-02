@@ -112,6 +112,9 @@ coverage/
 # Project Specific
 # ============================================
 
+# Development documentation and planning
+.agent/
+
 # Crash logs from BSOD
 crash-logs/
 *.crash
