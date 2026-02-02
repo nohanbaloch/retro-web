@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Retro Web - A complete web-based operating system inspired by Windows XP"
+    />
+    <title>Retro Web OS</title>
+
+    <!-- Core Styles -->
+    <link rel="stylesheet" href="ui/themes/windows-xp.css" />
+    <link rel="stylesheet" href="ui/animations.css" />
+
+    <!-- Prevent text selection and context menu during boot -->
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: "Tahoma", "MS Sans Serif", sans-serif;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      #boot-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 10000;
+      }
+
+      #desktop-container {
+        display: none;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      #bsod-container {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 99999;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Boot Screen -->
+    <div id="boot-container"></div>
+
+    <!-- Desktop Environment -->
+    <div id="desktop-container">
+      <div id="desktop"></div>
+      <div id="taskbar"></div>
+      <div id="start-menu"></div>
+      <div id="notification-center"></div>
+    </div>
+
+    <!-- Blue Screen of Death -->
+    <div id="bsod-container"></div>
+
+    <!-- Window Container -->
+    <div id="window-layer"></div>
+
+    <!-- Boot Sequence - Must Load First -->
+    <script type="module" src="boot/bootloader.js"></script>
+  </body>
+</html>

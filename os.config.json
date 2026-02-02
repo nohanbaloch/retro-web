@@ -1,0 +1,46 @@
+{
+  "system": {
+    "name": "Retro Web",
+    "version": "1.0.0",
+    "build": "2026.02.03",
+    "copyright": "MehrTek"
+  },
+  "boot": {
+    "splashDuration": 2000,
+    "diagnosticsEnabled": true,
+    "simulatedLatency": 150,
+    "progressSteps": 7,
+    "soundEnabled": false
+  },
+  "kernel": {
+    "maxProcesses": 64,
+    "eventQueueSize": 1000,
+    "debugMode": false,
+    "strictSandboxing": true
+  },
+  "display": {
+    "defaultTheme": "windows-xp",
+    "defaultResolution": "1024x768",
+    "allowCustomThemes": true
+  },
+  "filesystem": {
+    "storageBackend": "indexeddb",
+    "maxFileSize": 52428800,
+    "quotaWarningThreshold": 0.8
+  },
+  "security": {
+    "requirePermissions": true,
+    "allowPlugins": true,
+    "verifySignatures": false
+  },
+  "ui": {
+    "animationsEnabled": true,
+    "transitionDuration": 300,
+    "windowSnapThreshold": 20
+  },
+  "power": {
+    "shutdownDelay": 1000,
+    "sleepTimeout": 0,
+    "autoSaveInterval": 30000
+  }
+}

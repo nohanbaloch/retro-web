@@ -1,0 +1,302 @@
+<div align="center">
+
+# 🖥️ Retro Web OS
+
+### *A Nostalgic Journey Back to Windows XP*
+
+[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/Mehrtek/retro-web)
+[![Phase](https://img.shields.io/badge/phase-2%20complete-success.svg)](https://github.com/Mehrtek/retro-web)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![JavaScript](https://img.shields.io/badge/javascript-vanilla-yellow.svg)](https://github.com/Mehrtek/retro-web)
+
+*A complete web-based operating system inspired by Windows XP, built with pure vanilla JavaScript. No frameworks, no dependencies—just pure nostalgia.*
+
+[🚀 Launch Demo](#getting-started) • [📖 Documentation](test/TEST.html) • [🎯 Roadmap](.agent/ROADMAP.md) • [🐛 Report Bug](https://github.com/Mehrtek/retro-web/issues)
+
+---
+
+</div>
+
+## ✨ Features
+
+### 🎉 Phase 1: Foundation ✅ **COMPLETE**
+
+<table>
+<tr>
+<td width="50%">
+
+**Boot System**
+
+- ✅ 7-stage boot sequence
+- ✅ BIOS-style splash screen
+- ✅ System diagnostics
+- ✅ Blue Screen of Death (BSOD)
+- ✅ Crash logging & recovery
+
+</td>
+<td width="50%">
+
+**Core Kernel**
+
+- ✅ Process management
+- ✅ Event-driven architecture
+- ✅ Process scheduler
+- ✅ Permission engine
+- ✅ Global error handling
+
+</td>
+</tr>
+</table>
+
+### 🎨 Phase 2: Desktop Environment ✅ **COMPLETE**
+
+<table>
+<tr>
+<td width="50%">
+
+**Taskbar & Start Menu**
+
+- ✅ Authentic XP-style green Start button
+- ✅ Quick Launch area
+- ✅ Dynamic window buttons
+- ✅ System tray with icons
+- ✅ Live clock (updates every second)
+- ✅ Two-column Start Menu layout
+- ✅ Power options (Shutdown, Log Off)
+
+</td>
+<td width="50%">
+
+**Desktop & Windows**
+
+- ✅ Icon grid system
+- ✅ My Computer, Documents, Recycle Bin
+- ✅ Single-click selection
+- ✅ Double-click to open
+- ✅ Draggable windows
+- ✅ Minimize, Maximize, Close
+- ✅ Window focus management
+
+</td>
+</tr>
+</table>
+
+### 🚧 Phase 3: Applications & Filesystem **IN PROGRESS**
+
+- 🔨 Virtual filesystem with IndexedDB
+- 🔨 File Explorer with tree navigation
+- 🔨 Notepad text editor
+- 🔨 Terminal with command support
+- 🔨 Paint application
+- 🔨 Control Panel
+
+---
+
+## 📂 Project Structure
+
+```
+RetroWeb/
+├── 🚀 boot/           # Boot sequence and BSOD
+├── 🧠 kernel/         # Core OS kernel
+├── 🖼️  system/         # Window manager and desktop services
+├── 💾 filesystem/     # Virtual filesystem
+├── ⚙️  services/       # System services
+├── 🎨 ui/             # Themes and styling
+├── 📱 apps/           # Built-in applications
+├── 🧪 test/           # Test files and documentation
+├── 📄 index.html      # Main entry point
+└── ⚙️  os.config.json  # System configuration
+```
+
+---
+
+## 🚀 Getting Started
+
+### Quick Start
+
+Simply open `index.html` in a modern web browser to boot the system:
+
+```bash
+# Clone the repository
+git clone https://github.com/Mehrtek/retro-web.git
+
+# Navigate to the project
+cd retro-web
+
+# Open in browser
+start index.html  # Windows
+open index.html   # macOS
+xdg-open index.html  # Linux
+```
+
+### Using Local Server (Recommended)
+
+For the best experience, use the included PowerShell server:
+
+```powershell
+.\start-server.ps1
+```
+
+Then navigate to `http://localhost:8080` in your browser.
+
+---
+
+## 🎮 Interactive Demo
+
+<div align="center">
+
+### Try It Out
+
+1. **Click the Start button** → Start menu slides in
+2. **Double-click "My Computer"** → Opens system window
+3. **Launch applications** → From Start Menu or Desktop
+4. **Drag windows** → Move them around
+5. **Minimize/Maximize** → Full window management
+6. **Watch the clock** → Live updates every second!
+
+[📖 View Full Testing Guide](test/PHASE2.html)
+
+</div>
+
+---
+
+## 🎯 Roadmap
+
+<table>
+<tr>
+<td align="center">✅</td>
+<td><strong>Phase 1</strong></td>
+<td>Foundation & Boot System</td>
+<td><em>Complete</em></td>
+</tr>
+<tr>
+<td align="center">✅</td>
+<td><strong>Phase 2</strong></td>
+<td>Desktop Environment</td>
+<td><em>Complete</em></td>
+</tr>
+<tr>
+<td align="center">🚧</td>
+<td><strong>Phase 3</strong></td>
+<td>Virtual Filesystem</td>
+<td><em>In Progress</em></td>
+</tr>
+<tr>
+<td align="center">📋</td>
+<td><strong>Phase 4</strong></td>
+<td>Built-in Applications</td>
+<td><em>Planned</em></td>
+</tr>
+<tr>
+<td align="center">📋</td>
+<td><strong>Phase 5</strong></td>
+<td>Advanced Features</td>
+<td><em>Planned</em></td>
+</tr>
+</table>
+
+[📋 View Full Roadmap](.agent/ROADMAP.md)
+
+---
+
+## 💻 Development
+
+### Tech Stack
+
+- **Language**: Pure Vanilla JavaScript (ES6+)
+- **Modules**: ES6 Modules
+- **Architecture**: Event-driven
+- **Styling**: Custom CSS (Windows XP theme)
+- **Storage**: IndexedDB (planned)
+
+### Design Philosophy
+
+- ✨ **No frameworks** - Pure vanilla JavaScript
+- 🎨 **100% XP authentic** - Pixel-perfect Windows XP recreation
+- 🏗️ **Modular architecture** - Clean, maintainable code
+- 🔒 **Sandboxed apps** - Secure process isolation
+- 📦 **No build tools** - Works directly in browser
+
+### Code Statistics
+
+- **Total Files**: 20+ core files
+- **Lines of Code**: ~3,500+
+- **Components**: 10+ major systems
+- **Visual Fidelity**: 100% Windows XP authentic
+
+---
+
+## 🧪 Testing
+
+### Test Documentation
+
+- **[Phase 2 Showcase](test/PHASE2.html)** - Feature showcase and interactive testing
+- **[General Testing](test/TEST.html)** - Complete testing instructions
+- **[Test Folder](test/)** - All test files and documentation
+
+### Browser Compatibility
+
+| Browser | Status |
+|---------|--------|
+| Chrome/Edge | ✅ Fully Supported |
+| Firefox | ✅ Fully Supported |
+| Safari | ⚠️ Mostly Supported |
+| Opera | ✅ Fully Supported |
+
+---
+
+## 📚 Documentation
+
+- � [Architecture Guide](.agent/retro_web.md)
+- � [Boot & BSOD Specification](.agent/retro_web_boot_bsod_specification.md)
+- � [Implementation Summary](.agent/IMPLEMENTATION_SUMMARY.md)
+- 🎯 [Phase 2 Summary](.agent/PHASE_2_SUMMARY.md)
+- �️ [Development Roadmap](.agent/ROADMAP.md)
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📜 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+### 👨‍💻 Designed & Developed by
+
+**[Nohan Baloch](https://github.com/nohanbaloch)**
+
+---
+
+### 🏢 Organization
+
+**[Mehrtek](https://github.com/Mehrtek)**
+
+&copy; 2026 Mehrtek. All rights reserved.
+
+---
+
+### ⭐ Show Your Support
+
+If you like this project, please consider giving it a ⭐ on GitHub!
+
+[![GitHub stars](https://img.shields.io/github/stars/Mehrtek/retro-web?style=social)](https://github.com/Mehrtek/retro-web)
+
+---
+
+*Built with ❤️ and nostalgia for Windows XP*
+
+</div>
