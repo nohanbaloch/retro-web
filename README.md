@@ -17,6 +17,18 @@
 
 </div>
 
+## 📸 Preview
+
+<div align="center">
+
+![Retro Web OS Screenshot](screenshot/retro-web.jpg)
+
+*Experience the authentic Windows XP interface in your browser*
+
+</div>
+
+---
+
 ## ✨ Features
 
 ### 🎉 Phase 1: Foundation ✅ **COMPLETE**
