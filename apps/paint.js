@@ -749,7 +749,51 @@ class Paint {
      * Show open dialog
      */
     async showOpenDialog(windowId) {
-        alert('Open functionality would require loading image files from VFS.\nThis feature is under development.');
+        const path = prompt('Enter image path to open:', 'C:\\Documents and Settings\\User\\My Documents\\My Pictures\\');
+        if (path) {
+            await this.openFile(path, windowId);
+        }
+    }
+
+    /**
+     * Open image from file
+     */
+    async openFile(filePath, windowId) {
+        if (!this.vfs) {
+            alert('Virtual filesystem not available');
+            return;
+        }
+
+        try {
+            const content = await this.vfs.readFile(filePath);
+            
+            // Create image from content
+            const img = new Image();
+            img.onload = () => {
+                // Resize canvas to match image
+                this.resizeCanvas(img.width, img.height, windowId);
+                
+                // Draw image
+                this.ctx.drawImage(img, 0, 0);
+                
+                // Reset state
+                this.currentFile = filePath;
+                this.isModified = false;
+                this.history = [];
+                this.historyIndex = -1;
+                this.saveToHistory();
+                this.updateTitle(windowId);
+                this.updateStatus(windowId, `Opened: ${filePath}`);
+            };
+            img.onerror = () => {
+                alert('Failed to load image. File may be corrupted or invalid format.');
+            };
+            img.src = content;
+            
+        } catch (err) {
+            alert(`Failed to open file: ${err.message}`);
+            console.error('[Paint] Open error:', err);
+        }
     }
 
     /**

@@ -385,6 +385,12 @@ class StartMenu {
                     return;
                 }
                 break;
+            case 'control panel':
+                if (window.RetroWeb?.controlPanel) {
+                    window.RetroWeb.controlPanel.open();
+                    return;
+                }
+                break;
         }
 
         // Fallback to placeholder window

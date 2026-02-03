@@ -44,7 +44,11 @@ class FileExplorer {
         this.setupContextMenu(win.id);
 
         // Load initial content
+        await this.loadTreeView(win.id);
         await this.navigateTo(win.id, initialPath, false);
+        
+        // Setup Drag & Drop
+        this.setupDragAndDrop(win.id);
 
         return win;
     }
@@ -79,9 +83,17 @@ class FileExplorer {
                         <span class="address-path">${state.currentPath}</span>
                     </div>
                 </div>
-                <!-- Content Area -->
-                <div id="explorer-content-${state.windowId}" class="explorer-content" data-view-mode="icons" style="flex: 1; overflow: auto; padding: 10px; background: white;">
-                    <div style="color: #888;">Loading...</div>
+                <!-- Main Body (Tree + Content) -->
+                <div class="explorer-body" style="display: flex; flex: 1; overflow: hidden;">
+                    <!-- Tree View -->
+                    <div id="explorer-tree-${state.windowId}" class="explorer-tree" style="width: 200px; border-right: 1px solid #ccc; overflow: auto; background: white; padding: 5px; font-size: 12px;">
+                        <div style="color: #888;">Loading tree...</div>
+                    </div>
+                    
+                    <!-- Content Area -->
+                    <div id="explorer-content-${state.windowId}" class="explorer-content" data-view-mode="icons" style="flex: 1; overflow: auto; padding: 10px; background: white;">
+                        <div style="color: #888;">Loading...</div>
+                    </div>
                 </div>
                 <!-- Status Bar -->
                 <div id="explorer-status-${state.windowId}" class="explorer-status" style="padding: 4px 8px; background: #f0f0f0; border-top: 1px solid #ccc; font-size: 11px; color: #666;">
@@ -138,6 +150,7 @@ class FileExplorer {
             const pathParts = path.split('\\').filter(p => p);
             const title = pathParts.length > 0 ? pathParts[pathParts.length - 1] || 'Local Disk (C:)' : 'My Computer';
             this.updateWindowTitle(windowId, title);
+            this.updateTreeSelection(windowId, path);
 
         } catch (err) {
             console.error('[Explorer] Navigation failed:', err);
@@ -192,6 +205,10 @@ class FileExplorer {
                 
                 return `
                     <div class="explorer-item" 
+                         draggable="true"
+                         ondragstart="window.RetroWeb.explorer.handleDragStart(event, '${entry.name}', '${entry.type}', '${windowId}')"
+                         ondragover="window.RetroWeb.explorer.handleDragOver(event)"
+                         ondrop="if('${entry.type}' === 'directory') window.RetroWeb.explorer.handleDrop(event, '${windowId}', '${state.currentPath}${entry.name}\\\\')"
                          data-name="${entry.name}"
                          data-type="${entry.type}"
                          ondblclick="window.RetroWeb.explorer.handleItemDblClick('${windowId}', '${entry.name}', '${entry.type}')"
@@ -481,6 +498,10 @@ class FileExplorer {
             const icon = entry.type === 'directory' ? '📁' : this.getFileIcon(entry.name);
             return `
                 <div class="explorer-item list-item" 
+                     draggable="true"
+                     ondragstart="window.RetroWeb.explorer.handleDragStart(event, '${entry.name}', '${entry.type}', '${windowId}')"
+                     ondragover="window.RetroWeb.explorer.handleDragOver(event)"
+                     ondrop="if('${entry.type}' === 'directory') window.RetroWeb.explorer.handleDrop(event, '${windowId}', '${this.windows.get(windowId).currentPath}${entry.name}\\\\')"
                      data-name="${entry.name}" 
                      data-type="${entry.type}"
                      style="display: flex; align-items: center; padding: 4px 8px; cursor: pointer; border-radius: 3px;"
@@ -517,6 +538,10 @@ class FileExplorer {
 
             html += `
                 <tr class="explorer-item details-row" 
+                    draggable="true"
+                    ondragstart="window.RetroWeb.explorer.handleDragStart(event, '${entry.name}', '${entry.type}', '${windowId}')"
+                    ondragover="window.RetroWeb.explorer.handleDragOver(event)"
+                    ondrop="if('${entry.type}' === 'directory') window.RetroWeb.explorer.handleDrop(event, '${windowId}', '${this.windows.get(windowId).currentPath}${entry.name}\\\\')"
                     data-name="${entry.name}" 
                     data-type="${entry.type}"
                     style="cursor: pointer;"
@@ -758,6 +783,218 @@ class FileExplorer {
             this.navigateTo(windowId, newPath);
         } else {
             this.openFile(windowId, state.currentPath, name);
+        }
+    }
+
+    // ==================== TREE VIEW ====================
+
+    /**
+     * Load tree view
+     */
+    async loadTreeView(windowId) {
+        const treeEl = document.getElementById(`explorer-tree-${windowId}`);
+        if (!treeEl) return;
+
+        // Clear tree
+        treeEl.innerHTML = '';
+
+        // Add Root (C:)
+        const rootNode = document.createElement('div');
+        rootNode.className = 'tree-node';
+        rootNode.style.paddingLeft = '0px';
+        rootNode.innerHTML = `
+            <div class="tree-row" style="display: flex; align-items: center; padding: 2px; cursor: pointer;" 
+                 onclick="window.RetroWeb.explorer.navigateTo('${windowId}', 'C:\\\\')"
+                 data-path="C:\\">
+                <span class="tree-toggle" style="width: 16px; text-align: center; cursor: pointer; margin-right: 4px;" onclick="window.RetroWeb.explorer.toggleNode(event, '${windowId}', 'C:\\\\')">➖</span>
+                <span style="margin-right: 4px;">💻</span>
+                <span>Local Disk (C:)</span>
+            </div>
+            <div class="tree-children" id="tree-children-${windowId}-C" style="padding-left: 16px;"></div>
+        `;
+        treeEl.appendChild(rootNode);
+
+        // Load initial children for C:
+        await this.expandNode(windowId, 'C:\\');
+    }
+
+    /**
+     * Toggle tree node expansion
+     */
+    async toggleNode(event, windowId, path) {
+        if (event) event.stopPropagation();
+        
+        const childrenContainer = document.getElementById(`tree-children-${windowId}-${path.replace(/\\/g, '')}`);
+        const toggleBtn = event.target;
+
+        if (childrenContainer.style.display === 'none') {
+            childrenContainer.style.display = 'block';
+            toggleBtn.textContent = '➖';
+            await this.expandNode(windowId, path);
+        } else {
+            childrenContainer.style.display = 'none';
+            toggleBtn.textContent = '➕';
+        }
+    }
+
+    /**
+     * Expand tree node
+     */
+    async expandNode(windowId, path) {
+        const childrenContainer = document.getElementById(`tree-children-${windowId}-${path.replace(/\\/g, '')}`);
+        if (!childrenContainer) return;
+
+        // If already loaded, just return (unless we want to refresh)
+        if (childrenContainer.hasChildNodes()) return;
+
+        try {
+            const entries = await this.vfs.listDirectory(path);
+            const folders = entries.filter(e => e.type === 'directory').sort((a, b) => a.name.localeCompare(b.name));
+
+            if (folders.length === 0) {
+                // No children
+                const row = childrenContainer.parentElement.querySelector('.tree-row');
+                const toggle = row.querySelector('.tree-toggle');
+                toggle.style.opacity = '0'; // Hide toggle but keep spacing
+                return;
+            }
+
+            folderLoop: for (const folder of folders) {
+                const folderPath = path + folder.name + '\\';
+                const safeId = folderPath.replace(/\\/g, '');
+                
+                const node = document.createElement('div');
+                node.className = 'tree-node';
+                node.innerHTML = `
+                    <div class="tree-row" style="display: flex; align-items: center; padding: 2px; cursor: pointer;" 
+                         onclick="window.RetroWeb.explorer.navigateTo('${windowId}', '${folderPath.replace(/\\/g, '\\\\')}')"
+                         data-path="${folderPath}">
+                        <span class="tree-toggle" style="width: 16px; text-align: center; cursor: pointer; margin-right: 4px;" onclick="window.RetroWeb.explorer.toggleNode(event, '${windowId}', '${folderPath.replace(/\\/g, '\\\\')}')">➕</span>
+                        <span style="margin-right: 4px;">📁</span>
+                        <span>${folder.name}</span>
+                    </div>
+                    <div class="tree-children" id="tree-children-${windowId}-${safeId}" style="display: none; padding-left: 16px;"></div>
+                `;
+                
+                // DnD for tree nodes
+                const row = node.querySelector('.tree-row');
+                row.addEventListener('dragover', (e) => this.handleDragOver(e));
+                row.addEventListener('drop', (e) => this.handleDrop(e, windowId, folderPath));
+
+                childrenContainer.appendChild(node);
+            }
+        } catch (err) {
+            console.error('Failed to expand node:', err);
+        }
+    }
+
+    /**
+     * Update tree selection
+     */
+    updateTreeSelection(windowId, path) {
+        const treeEl = document.getElementById(`explorer-tree-${windowId}`);
+        if (!treeEl) return;
+
+        // Remove old selection
+        const oldSelected = treeEl.querySelector('.tree-selected');
+        if (oldSelected) {
+            oldSelected.style.background = 'transparent';
+            oldSelected.style.color = 'black';
+            oldSelected.classList.remove('tree-selected');
+        }
+
+        // Find new selection
+        // We might need to ensure the path to this node is expanded. 
+        // For simple implementation, we assume basic interaction.
+        const rows = treeEl.querySelectorAll('.tree-row');
+        for (const row of rows) {
+            if (row.dataset.path === path) {
+                row.style.background = '#316AC5';
+                row.style.color = 'white';
+                row.classList.add('tree-selected');
+                break;
+            }
+        }
+    }
+
+    // ==================== DRAG & DROP ====================
+
+    /**
+     * Setup drag and drop for a window
+     */
+    setupDragAndDrop(windowId) {
+        const contentEl = document.getElementById(`explorer-content-${windowId}`);
+        if (!contentEl) return;
+
+        // Container drop zone (dropping into current folder's whitespace)
+        contentEl.addEventListener('dragover', (e) => this.handleDragOver(e));
+        contentEl.addEventListener('drop', (e) => {
+             // If dropping on whitespace, dropping into current folder? 
+             // Usually drag and drop moves TO a folder. 
+             // If dropping into empty space of current folder, it does nothing unless dragging from *another* folder.
+             // For now, let's implement dropping ON folders.
+             e.preventDefault();
+        });
+    }
+
+    /**
+     * Handle drag start
+     */
+    handleDragStart(e, name, type, windowId) {
+        const state = this.windows.get(windowId);
+        if (!state) return;
+
+        const path = state.currentPath + name;
+        e.dataTransfer.setData('text/plain', JSON.stringify({
+            path: path,
+            name: name,
+            type: type
+        }));
+        e.dataTransfer.effectAllowed = 'move';
+        
+        // Add visual feedback class if needed
+    }
+
+    /**
+     * Handle drag over
+     */
+    handleDragOver(e) {
+        e.preventDefault(); // Necessary to allow dropping
+        e.dataTransfer.dropEffect = 'move';
+        // Add highlight visual if target is a folder
+    }
+
+    /**
+     * Handle drop
+     */
+    async handleDrop(e, windowId, targetPath) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        try {
+            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            const srcPath = data.path;
+            const destPath = targetPath + data.name;
+
+            if (srcPath === destPath) return; // Dropped on self/parent?
+            if (targetPath.startsWith(srcPath)) return; // Can't move into self
+
+            console.log(`[Explorer] Moving ${srcPath} -> ${destPath}`);
+
+            if (data.type === 'directory' || data.type === 'file') {
+                 await this.vfs.moveFile(srcPath, destPath);
+            }
+            
+            // Refresh
+            await this.refresh(windowId);
+            // Refresh tree if needed (brute force reload for now)
+            await this.loadTreeView(windowId);
+
+            this.updateStatusMessage(windowId, `Moved: ${data.name}`);
+
+        } catch (err) {
+            console.error('Drop failed:', err);
+            // alert('Move failed: ' + err.message);
         }
     }
 }

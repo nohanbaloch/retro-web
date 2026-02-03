@@ -172,6 +172,11 @@ class Bootloader {
         paint.init(window.RetroWeb.windowManager, window.RetroWeb.vfs);
         window.RetroWeb.paint = paint;
         console.log("[BOOTLOADER] Paint initialized");
+        
+        const { controlPanel } = await import("../apps/control-panel.js");
+        controlPanel.init(window.RetroWeb.windowManager, window.RetroWeb.vfs);
+        window.RetroWeb.controlPanel = controlPanel;
+        console.log("[BOOTLOADER] Control Panel initialized");
       } catch (error) {
         console.warn("[BOOTLOADER] Some apps failed to load:", error);
       }
