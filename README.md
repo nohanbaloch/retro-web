@@ -4,8 +4,8 @@
 
 ### *A Nostalgic Journey Back to Windows XP*
 
-[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](https://github.com/nohanbaloch/retro-web)
-[![Phase](https://img.shields.io/badge/phase-3%20complete-success.svg)](https://github.com/nohanbaloch/retro-web)
+[![Version](https://img.shields.io/badge/version-0.4.0-blue.svg)](https://github.com/nohanbaloch/retro-web)
+[![Phase](https://img.shields.io/badge/phase-4%20in%20progress-yellow.svg)](https://github.com/nohanbaloch/retro-web)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![JavaScript](https://img.shields.io/badge/javascript-vanilla-yellow.svg)](https://github.com/nohanbaloch/retro-web)
 
@@ -104,11 +104,11 @@
 - ✅ Persistent storage across page reloads
 - ✅ Event-driven file system operations
 
-### 🚧 Phase 4: Applications **NEXT**
+### 🖥️ Phase 4: Built-in Applications 🚧 **IN PROGRESS**
 
-- 🔨 File Explorer with tree navigation
-- 🔨 Notepad text editor
-- 🔨 Terminal with command support
+- ✅ **File Explorer** - Navigate folders with back/forward/up buttons & address bar
+- ✅ **Notepad** - Full text editor with File/Edit/Format menus & VFS integration
+- ✅ **Terminal** - Command prompt with 15+ commands & VFS integration
 - 🔨 Paint application
 - 🔨 Control Panel
 

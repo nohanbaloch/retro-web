@@ -53,7 +53,9 @@ class Desktop {
             { name: 'My Computer', icon: '💻', x: 0, y: 0, action: 'mycomputer' },
             { name: 'My Documents', icon: '📁', x: 0, y: 1, action: 'mydocuments' },
             { name: 'Recycle Bin', icon: '🗑️', x: 0, y: 2, action: 'recyclebin' },
-            { name: 'Notepad', icon: '📝', x: 0, y: 3, action: 'notepad' }
+            { name: 'Notepad', icon: '📝', x: 0, y: 3, action: 'notepad' },
+            { name: 'Terminal', icon: '⌨️', x: 0, y: 4, action: 'terminal' },
+            { name: 'GitHub', icon: '🐙', x: 0, y: 5, action: 'github' }
         ];
 
         defaultIcons.forEach(iconData => {
@@ -171,16 +173,22 @@ class Desktop {
 
         switch (action) {
             case 'mycomputer':
-                this.openMyComputer();
+                this.openExplorer('C:\\', 'My Computer');
                 break;
             case 'mydocuments':
-                this.openMyDocuments();
+                this.openExplorer('C:\\Documents and Settings\\User\\My Documents', 'My Documents');
                 break;
             case 'recyclebin':
-                this.openRecycleBin();
+                this.openExplorer('C:\\Recycle Bin', 'Recycle Bin');
                 break;
             case 'notepad':
                 this.launchApp('Notepad', '📝');
+                break;
+            case 'terminal':
+                this.launchApp('Terminal', '⌨️');
+                break;
+            case 'github':
+                window.open('https://github.com/nohanbaloch/retro-web', '_blank');
                 break;
             default:
                 this.launchApp(name, icon);
@@ -188,84 +196,25 @@ class Desktop {
     }
 
     /**
-     * Open My Computer
+     * Open File Explorer with path
      */
-    openMyComputer() {
-        if (window.RetroWeb?.windowManager) {
-            const win = window.RetroWeb.windowManager.createWindow({
-                title: 'My Computer',
-                width: 700,
-                height: 500,
-                x: 150,
-                y: 100,
-                content: `
-                    <div style="padding: 20px;">
-                        <h2 style="margin-top: 0;">💻 My Computer</h2>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 20px; margin-top: 20px;">
-                            <div style="text-align: center; cursor: pointer;">
-                                <div style="font-size: 48px;">💾</div>
-                                <div style="font-size: 11px; margin-top: 8px;">Local Disk (C:)</div>
-                            </div>
-                            <div style="text-align: center; cursor: pointer;">
-                                <div style="font-size: 48px;">📀</div>
-                                <div style="font-size: 11px; margin-top: 8px;">CD Drive (D:)</div>
-                            </div>
-                            <div style="text-align: center; cursor: pointer;">
-                                <div style="font-size: 48px;">📁</div>
-                                <div style="font-size: 11px; margin-top: 8px;">Documents</div>
-                            </div>
-                        </div>
-                    </div>
-                `
-            });
-
-            this.emitWindowCreated(win.id, 'My Computer', '💻');
+    async openExplorer(path, title) {
+        if (window.RetroWeb?.explorer) {
+            await window.RetroWeb.explorer.open(path, title);
+        } else {
+            console.error('[DESKTOP] File Explorer not initialized');
         }
     }
-
     /**
-     * Open My Documents
+     * Emit window created event
      */
-    openMyDocuments() {
-        if (window.RetroWeb?.windowManager) {
-            const win = window.RetroWeb.windowManager.createWindow({
-                title: 'My Documents',
-                width: 600,
-                height: 400,
-                x: 200,
-                y: 150,
-                content: `
-                    <div style="padding: 20px;">
-                        <h2 style="margin-top: 0;">📁 My Documents</h2>
-                        <p>Your documents folder is empty.</p>
-                    </div>
-                `
+    emitWindowCreated(windowId, title, icon) {
+        if (window.RetroWeb?.kernel) {
+            window.RetroWeb.kernel.emit('window:created', {
+                windowId,
+                title,
+                icon
             });
-
-            this.emitWindowCreated(win.id, 'My Documents', '📁');
-        }
-    }
-
-    /**
-     * Open Recycle Bin
-     */
-    openRecycleBin() {
-        if (window.RetroWeb?.windowManager) {
-            const win = window.RetroWeb.windowManager.createWindow({
-                title: 'Recycle Bin',
-                width: 500,
-                height: 350,
-                x: 250,
-                y: 200,
-                content: `
-                    <div style="padding: 20px;">
-                        <h2 style="margin-top: 0;">🗑️ Recycle Bin</h2>
-                        <p>Recycle Bin is empty.</p>
-                    </div>
-                `
-            });
-
-            this.emitWindowCreated(win.id, 'Recycle Bin', '🗑️');
         }
     }
 
@@ -273,6 +222,24 @@ class Desktop {
      * Launch an application
      */
     launchApp(name, icon) {
+        // Check for real applications
+        switch (name.toLowerCase()) {
+            case 'notepad':
+                if (window.RetroWeb?.notepad) {
+                    window.RetroWeb.notepad.open();
+                    return;
+                }
+                break;
+            case 'terminal':
+            case 'command prompt':
+                if (window.RetroWeb?.terminal) {
+                    window.RetroWeb.terminal.open();
+                    return;
+                }
+                break;
+        }
+
+        // Fallback to placeholder window
         if (window.RetroWeb?.windowManager) {
             const win = window.RetroWeb.windowManager.createWindow({
                 title: name,
@@ -284,25 +251,12 @@ class Desktop {
                     <div style="padding: 20px; text-align: center;">
                         <div style="font-size: 48px; margin-bottom: 20px;">${icon}</div>
                         <h2>${name}</h2>
-                        <p>Application content will be implemented here.</p>
+                        <p>Application coming soon...</p>
                     </div>
                 `
             });
 
             this.emitWindowCreated(win.id, name, icon);
-        }
-    }
-
-    /**
-     * Emit window created event
-     */
-    emitWindowCreated(windowId, title, icon) {
-        if (window.RetroWeb?.kernel) {
-            window.RetroWeb.kernel.emit('window:created', {
-                windowId,
-                title,
-                icon
-            });
         }
     }
 

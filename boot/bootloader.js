@@ -147,6 +147,29 @@ class Bootloader {
       window.RetroWeb.vfs = new VFS(window.RetroWeb.kernel);
       await window.RetroWeb.vfs.initialize();
       console.log("[BOOTLOADER] VFS initialized");
+      
+      // Initialize File Explorer
+      const { FileExplorer } = await import("../system/file-explorer.js");
+      window.RetroWeb.explorer = new FileExplorer(
+        window.RetroWeb.windowManager,
+        window.RetroWeb.vfs
+      );
+      console.log("[BOOTLOADER] File Explorer initialized");
+
+      // Initialize built-in applications
+      try {
+        const { notepad } = await import("../apps/notepad.js");
+        notepad.init(window.RetroWeb.windowManager, window.RetroWeb.vfs);
+        window.RetroWeb.notepad = notepad;
+        console.log("[BOOTLOADER] Notepad initialized");
+
+        const { terminal } = await import("../apps/terminal.js");
+        terminal.init(window.RetroWeb.windowManager, window.RetroWeb.vfs);
+        window.RetroWeb.terminal = terminal;
+        console.log("[BOOTLOADER] Terminal initialized");
+      } catch (error) {
+        console.warn("[BOOTLOADER] Some apps failed to load:", error);
+      }
     } catch (error) {
       console.error("[BOOTLOADER] VFS initialization failed:", error);
       throw new Error("Virtual filesystem initialization failed: " + error.message);

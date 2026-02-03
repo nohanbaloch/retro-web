@@ -139,7 +139,8 @@ class StartMenu {
             { name: 'File Explorer', icon: '📁', action: 'explorer' },
             { name: 'Notepad', icon: '📝', action: 'notepad' },
             { name: 'Terminal', icon: '⌨️', action: 'terminal' },
-            { name: 'Paint', icon: '🎨', action: 'paint' }
+            { name: 'Paint', icon: '🎨', action: 'paint' },
+            { name: 'GitHub', icon: '🐙', action: 'github' }
         ];
 
         frequentApps.forEach(app => {
@@ -176,6 +177,7 @@ class StartMenu {
             { name: 'My Documents', icon: '📄', action: 'mydocuments' },
             { name: 'Control Panel', icon: '⚙️', action: 'controlpanel' },
             { separator: true },
+            { name: 'GitHub', icon: '🐙', action: 'github' },
             { name: 'Search', icon: '🔍', action: 'search' },
             { name: 'Help', icon: '❓', action: 'help' },
             { name: 'Run...', icon: '▶️', action: 'run' }
@@ -337,6 +339,9 @@ class StartMenu {
             case 'controlpanel':
                 this.launchApp('Control Panel', '⚙️');
                 break;
+            case 'github':
+                window.open('https://github.com/nohanbaloch/retro-web', '_blank');
+                break;
             case 'shutdown':
                 this.handleShutdown();
                 break;
@@ -354,8 +359,31 @@ class StartMenu {
      * Launch an application
      */
     launchApp(name, icon) {
+        // Check for real applications
+        switch (name.toLowerCase()) {
+            case 'notepad':
+                if (window.RetroWeb?.notepad) {
+                    window.RetroWeb.notepad.open();
+                    return;
+                }
+                break;
+            case 'terminal':
+                if (window.RetroWeb?.terminal) {
+                    window.RetroWeb.terminal.open();
+                    return;
+                }
+                break;
+            case 'file explorer':
+                if (window.RetroWeb?.explorer) {
+                    window.RetroWeb.explorer.open('C:\\', 'My Computer');
+                    return;
+                }
+                break;
+        }
+
+        // Fallback to placeholder window
         if (window.RetroWeb?.windowManager) {
-            const window = window.RetroWeb.windowManager.createWindow({
+            const win = window.RetroWeb.windowManager.createWindow({
                 title: name,
                 width: 600,
                 height: 400,
@@ -364,14 +392,14 @@ class StartMenu {
                 content: `<div style="padding: 20px; text-align: center;">
                     <div style="font-size: 48px; margin-bottom: 20px;">${icon}</div>
                     <h2>${name}</h2>
-                    <p>Application content will be implemented here.</p>
+                    <p>Application coming soon...</p>
                 </div>`
             });
 
             // Emit event for taskbar
             if (window.RetroWeb?.kernel) {
                 window.RetroWeb.kernel.emit('window:created', {
-                    windowId: window.id,
+                    windowId: win.id,
                     title: name,
                     icon: icon
                 });
