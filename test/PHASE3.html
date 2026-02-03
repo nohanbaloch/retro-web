@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 3: Virtual Filesystem - Test Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status.success {
+            background: #10b981;
+            color: white;
+        }
+
+        .status.error {
+            background: #ef4444;
+            color: white;
+        }
+
+        .status.pending {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .panel h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .test-item {
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .test-item.success {
+            border-left-color: #10b981;
+        }
+
+        .test-item.error {
+            border-left-color: #ef4444;
+        }
+
+        .test-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .test-result {
+            font-size: 14px;
+            color: #666;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .console {
+            background: #1e293b;
+            color: #10b981;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .console-line {
+            margin-bottom: 5px;
+        }
+
+        .console-line.error {
+            color: #ef4444;
+        }
+
+        .console-line.success {
+            color: #10b981;
+        }
+
+        .console-line.info {
+            color: #60a5fa;
+        }
+
+        .file-tree {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .file-tree-item {
+            padding: 2px 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                🗂️ Phase 3: Virtual Filesystem
+                <span class="status pending" id="vfs-status">Initializing...</span>
+            </h1>
+            <p class="subtitle">Testing IndexedDB-based virtual filesystem with full CRUD operations</p>
+        </div>
+
+        <div class="panel">
+            <h2>📊 System Statistics</h2>
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-files">0</div>
+                    <div class="stat-label">Files</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-dirs">0</div>
+                    <div class="stat-label">Directories</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-size">0 KB</div>
+                    <div class="stat-label">Total Size</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-cache">0</div>
+                    <div class="stat-label">Cache Entries</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>🧪 Test Operations</h2>
+            <div>
+                <button onclick="runAllTests()">▶️ Run All Tests</button>
+                <button onclick="testFileOperations()">📄 Test File Operations</button>
+                <button onclick="testDirectoryOperations()">📁 Test Directory Operations</button>
+                <button onclick="testPathResolution()">🔗 Test Path Resolution</button>
+                <button onclick="showFileTree()">🌳 Show File Tree</button>
+                <button onclick="resetVFS()">🔄 Reset VFS</button>
+            </div>
+            <div class="test-grid" id="test-results"></div>
+        </div>
+
+        <div class="panel">
+            <h2>📂 File System Tree</h2>
+            <div class="file-tree" id="file-tree">
+                <div style="color: #999;">Click "Show File Tree" to display the filesystem structure...</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>💻 Console Output</h2>
+            <div class="console" id="console"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { VFS } from '../filesystem/vfs.js';
+        import { pathResolver } from '../filesystem/path-resolver.js';
+
+        let vfs = null;
+        const consoleEl = document.getElementById('console');
+        const testResultsEl = document.getElementById('test-results');
+        const fileTreeEl = document.getElementById('file-tree');
+
+        // Initialize VFS
+        async function initVFS() {
+            try {
+                log('Initializing Virtual Filesystem...', 'info');
+                vfs = new VFS();
+                await vfs.initialize();
+                log('✓ VFS initialized successfully', 'success');
+                updateStatus('success', 'Ready');
+                await updateStats();
+            } catch (error) {
+                log('✗ VFS initialization failed: ' + error.message, 'error');
+                updateStatus('error', 'Failed');
+            }
+        }
+
+        // Logging
+        function log(message, type = 'info') {
+            const line = document.createElement('div');
+            line.className = `console-line ${type}`;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleEl.appendChild(line);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        // Update status badge
+        function updateStatus(type, text) {
+            const statusEl = document.getElementById('vfs-status');
+            statusEl.className = `status ${type}`;
+            statusEl.textContent = text;
+        }
+
+        // Update statistics
+        async function updateStats() {
+            if (!vfs) return;
+
+            try {
+                const entries = await vfs.storage.getAllEntries();
+                const files = entries.filter(e => e.type === 'file');
+                const dirs = entries.filter(e => e.type === 'directory');
+                const totalSize = files.reduce((sum, f) => sum + (f.size || 0), 0);
+
+                document.getElementById('stat-files').textContent = files.length;
+                document.getElementById('stat-dirs').textContent = dirs.length;
+                document.getElementById('stat-size').textContent = formatBytes(totalSize);
+                document.getElementById('stat-cache').textContent = vfs.cache.size;
+            } catch (error) {
+                log('Failed to update stats: ' + error.message, 'error');
+            }
+        }
+
+        // Format bytes
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // Add test result
+        function addTestResult(name, passed, message) {
+            const item = document.createElement('div');
+            item.className = `test-item ${passed ? 'success' : 'error'}`;
+            item.innerHTML = `
+                <div class="test-name">${passed ? '✓' : '✗'} ${name}</div>
+                <div class="test-result">${message}</div>
+            `;
+            testResultsEl.appendChild(item);
+        }
+
+        // Test file operations
+        window.testFileOperations = async function() {
+            if (!vfs) return;
+            testResultsEl.innerHTML = '';
+            log('=== Testing File Operations ===', 'info');
+
+            try {
+                // Create file
+                const testPath = 'C:\\Documents and Settings\\User\\Desktop\\test.txt';
+                await vfs.createFile(testPath, 'Hello, World!');
+                addTestResult('Create File', true, `Created ${testPath}`);
+                log('✓ File created', 'success');
+
+                // Read file
+                const content = await vfs.readFile(testPath);
+                const readPassed = content === 'Hello, World!';
+                addTestResult('Read File', readPassed, `Content: "${content}"`);
+                log(`✓ File read: ${content}`, 'success');
+
+                // Write file
+                await vfs.writeFile(testPath, 'Updated content!');
+                const newContent = await vfs.readFile(testPath);
+                const writePassed = newContent === 'Updated content!';
+                addTestResult('Write File', writePassed, `New content: "${newContent}"`);
+                log('✓ File written', 'success');
+
+                // Delete file
+                await vfs.deleteFile(testPath);
+                const exists = await vfs.exists(testPath);
+                addTestResult('Delete File', !exists, 'File deleted successfully');
+                log('✓ File deleted', 'success');
+
+                await updateStats();
+            } catch (error) {
+                addTestResult('File Operations', false, error.message);
+                log('✗ Error: ' + error.message, 'error');
+            }
+        };
+
+        // Test directory operations
+        window.testDirectoryOperations = async function() {
+            if (!vfs) return;
+            testResultsEl.innerHTML = '';
+            log('=== Testing Directory Operations ===', 'info');
+
+            try {
+                // Create directory
+                const testDir = 'C:\\Documents and Settings\\User\\Desktop\\TestFolder';
+                await vfs.createDirectory(testDir);
+                addTestResult('Create Directory', true, `Created ${testDir}`);
+                log('✓ Directory created', 'success');
+
+                // List directory
+                const desktopPath = 'C:\\Documents and Settings\\User\\Desktop';
+                const contents = await vfs.listDirectory(desktopPath);
+                addTestResult('List Directory', contents.length > 0, `Found ${contents.length} items`);
+                log(`✓ Listed ${contents.length} items`, 'success');
+
+                // Delete directory
+                await vfs.deleteDirectory(testDir);
+                const exists = await vfs.exists(testDir);
+                addTestResult('Delete Directory', !exists, 'Directory deleted successfully');
+                log('✓ Directory deleted', 'success');
+
+                await updateStats();
+            } catch (error) {
+                addTestResult('Directory Operations', false, error.message);
+                log('✗ Error: ' + error.message, 'error');
+            }
+        };
+
+        // Test path resolution
+        window.testPathResolution = function() {
+            testResultsEl.innerHTML = '';
+            log('=== Testing Path Resolution ===', 'info');
+
+            try {
+                // Normalize
+                const normalized = pathResolver.normalize('C:\\Users\\..\\Documents\\file.txt');
+                addTestResult('Normalize Path', true, `Result: ${normalized}`);
+
+                // Join
+                const joined = pathResolver.join('C:\\Users', 'Documents', 'file.txt');
+                addTestResult('Join Paths', true, `Result: ${joined}`);
+
+                // Basename
+                const basename = pathResolver.basename('C:\\Users\\Documents\\file.txt');
+                addTestResult('Get Basename', basename === 'file.txt', `Result: ${basename}`);
+
+                // Dirname
+                const dirname = pathResolver.dirname('C:\\Users\\Documents\\file.txt');
+                addTestResult('Get Dirname', true, `Result: ${dirname}`);
+
+                // Extension
+                const ext = pathResolver.extname('C:\\Users\\Documents\\file.txt');
+                addTestResult('Get Extension', ext === '.txt', `Result: ${ext}`);
+
+                log('✓ All path resolution tests passed', 'success');
+            } catch (error) {
+                addTestResult('Path Resolution', false, error.message);
+                log('✗ Error: ' + error.message, 'error');
+            }
+        };
+
+        // Show file tree
+        window.showFileTree = async function() {
+            if (!vfs) return;
+            log('Generating file tree...', 'info');
+
+            try {
+                const entries = await vfs.storage.getAllEntries();
+                const tree = buildTree(entries);
+                fileTreeEl.innerHTML = tree;
+                log('✓ File tree generated', 'success');
+            } catch (error) {
+                log('✗ Error: ' + error.message, 'error');
+            }
+        };
+
+        // Build tree HTML
+        function buildTree(entries) {
+            const root = entries.find(e => e.path === 'C:\\');
+            if (!root) return '<div>No filesystem found</div>';
+
+            let html = '';
+            function renderNode(entry, depth = 0) {
+                const indent = '  '.repeat(depth);
+                const icon = entry.type === 'directory' ? '📁' : '📄';
+                html += `<div class="file-tree-item">${indent}${icon} ${entry.name}</div>`;
+
+                if (entry.type === 'directory' && entry.children) {
+                    entry.children.forEach(childId => {
+                        const child = entries.find(e => e.id === childId);
+                        if (child) renderNode(child, depth + 1);
+                    });
+                }
+            }
+
+            renderNode(root);
+            return html;
+        }
+
+        // Run all tests
+        window.runAllTests = async function() {
+            await testFileOperations();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testDirectoryOperations();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            testPathResolution();
+        };
+
+        // Reset VFS
+        window.resetVFS = async function() {
+            if (!vfs && !confirm('Are you sure you want to reset the filesystem? This will delete all data.')) {
+                return;
+            }
+
+            try {
+                log('Resetting filesystem...', 'info');
+                await vfs.reset();
+                await vfs.initialize();
+                await updateStats();
+                testResultsEl.innerHTML = '';
+                log('✓ Filesystem reset complete', 'success');
+            } catch (error) {
+                log('✗ Reset failed: ' + error.message, 'error');
+            }
+        };
+
+        // Initialize on load
+        initVFS();
+    </script>
+</body>
+</html>

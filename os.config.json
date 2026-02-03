@@ -3,7 +3,7 @@
     "name": "Retro Web",
     "version": "1.0.0",
     "build": "2026.02.03",
-    "copyright": "MehrTek"
+    "copyright": "Nohan Baloch"
   },
   "boot": {
     "splashDuration": 2000,

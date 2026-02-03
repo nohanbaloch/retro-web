@@ -4,14 +4,14 @@
 
 ### *A Nostalgic Journey Back to Windows XP*
 
-[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/Mehrtek/retro-web)
-[![Phase](https://img.shields.io/badge/phase-2%20complete-success.svg)](https://github.com/Mehrtek/retro-web)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](https://github.com/nohanbaloch/retro-web)
+[![Phase](https://img.shields.io/badge/phase-3%20complete-success.svg)](https://github.com/nohanbaloch/retro-web)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![JavaScript](https://img.shields.io/badge/javascript-vanilla-yellow.svg)](https://github.com/Mehrtek/retro-web)
+[![JavaScript](https://img.shields.io/badge/javascript-vanilla-yellow.svg)](https://github.com/nohanbaloch/retro-web)
 
 *A complete web-based operating system inspired by Windows XP, built with pure vanilla JavaScript. No frameworks, no dependencies—just pure nostalgia.*
 
-[🚀 Launch Demo](#getting-started) • [📖 Documentation](test/TEST.html) • [🎯 Roadmap](.agent/ROADMAP.md) • [🐛 Report Bug](https://github.com/Mehrtek/retro-web/issues)
+[🚀 Launch Demo](#getting-started) • [📖 Documentation](test/TEST.html) • [🎯 Roadmap](.agent/ROADMAP.md) • [🐛 Report Bug](https://github.com/nohanbaloch/retro-web/issues)
 
 ---
 
@@ -93,9 +93,19 @@
 </tr>
 </table>
 
-### 🚧 Phase 3: Applications & Filesystem **IN PROGRESS**
+### 💾 Phase 3: Virtual Filesystem ✅ **COMPLETE**
 
-- 🔨 Virtual filesystem with IndexedDB
+- ✅ IndexedDB storage backend
+- ✅ File operations (create, read, write, delete, copy, move)
+- ✅ Directory operations (create, list, delete)
+- ✅ Windows-style path resolution
+- ✅ MIME type detection
+- ✅ Default Windows XP folder structure
+- ✅ Persistent storage across page reloads
+- ✅ Event-driven file system operations
+
+### 🚧 Phase 4: Applications **NEXT**
+
 - 🔨 File Explorer with tree navigation
 - 🔨 Notepad text editor
 - 🔨 Terminal with command support
@@ -130,7 +140,7 @@ Simply open `index.html` in a modern web browser to boot the system:
 
 ```bash
 # Clone the repository
-git clone https://github.com/Mehrtek/retro-web.git
+git clone https://github.com/nohanbaloch/retro-web.git
 
 # Navigate to the project
 cd retro-web
@@ -188,16 +198,16 @@ Then navigate to `http://localhost:8080` in your browser.
 <td><em>Complete</em></td>
 </tr>
 <tr>
-<td align="center">🚧</td>
+<td align="center">✅</td>
 <td><strong>Phase 3</strong></td>
 <td>Virtual Filesystem</td>
-<td><em>In Progress</em></td>
+<td><em>Complete</em></td>
 </tr>
 <tr>
-<td align="center">📋</td>
+<td align="center">🚧</td>
 <td><strong>Phase 4</strong></td>
 <td>Built-in Applications</td>
-<td><em>Planned</em></td>
+<td><em>Next</em></td>
 </tr>
 <tr>
 <td align="center">📋</td>
@@ -295,9 +305,9 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ### 🏢 Organization
 
-**[Mehrtek](https://github.com/Mehrtek)**
+**[Nohan Baloch](https://github.com/nohanbaloch)**
 
-&copy; 2026 Mehrtek. All rights reserved.
+&copy; 2026 Nohan Baloch. All rights reserved.
 
 ---
 
@@ -305,7 +315,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 If you like this project, please consider giving it a ⭐ on GitHub!
 
-[![GitHub stars](https://img.shields.io/github/stars/Mehrtek/retro-web?style=social)](https://github.com/Mehrtek/retro-web)
+[![GitHub stars](https://img.shields.io/github/stars/nohanbaloch/retro-web?style=social)](https://github.com/nohanbaloch/retro-web)
 
 ---
 

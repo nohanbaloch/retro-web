@@ -128,7 +128,6 @@ class Bootloader {
       "../system/start-menu.js",
       "../system/notification-center.js",
       "../system/power-manager.js",
-      "../filesystem/vfs.js",
       "../services/settings.js",
       "../services/user-session.js",
     ];
@@ -140,6 +139,17 @@ class Bootloader {
       } catch (error) {
         console.warn(`[BOOTLOADER] Failed to load ${servicePath}:`, error);
       }
+    }
+
+    // Initialize VFS separately with kernel reference
+    try {
+      const { VFS } = await import("../filesystem/vfs.js");
+      window.RetroWeb.vfs = new VFS(window.RetroWeb.kernel);
+      await window.RetroWeb.vfs.initialize();
+      console.log("[BOOTLOADER] VFS initialized");
+    } catch (error) {
+      console.error("[BOOTLOADER] VFS initialization failed:", error);
+      throw new Error("Virtual filesystem initialization failed: " + error.message);
     }
   }
 
