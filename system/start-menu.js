@@ -373,6 +373,12 @@ class StartMenu {
                     return;
                 }
                 break;
+            case 'paint':
+                if (window.RetroWeb?.paint) {
+                    window.RetroWeb.paint.open();
+                    return;
+                }
+                break;
             case 'file explorer':
                 if (window.RetroWeb?.explorer) {
                     window.RetroWeb.explorer.open('C:\\', 'My Computer');

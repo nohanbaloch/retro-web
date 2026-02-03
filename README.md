@@ -21,8 +21,7 @@
 
 <div align="center">
 
-![Retro Web OS Screenshot](screenshot/retro-web.jpg)
-
+![Retro Web OS Screenshot](screenshot/retro-web-os.png)
 *Experience the authentic Windows XP interface in your browser*
 
 </div>
@@ -46,6 +45,7 @@
 - ✅ Crash logging & recovery
 
 </td>
+
 <td width="50%">
 
 **Core Kernel**
@@ -216,8 +216,6 @@ Then navigate to `http://localhost:8080` in your browser.
 <td><em>Planned</em></td>
 </tr>
 </table>
-
-[📋 View Full Roadmap](.agent/ROADMAP.md)
 
 ---
 

@@ -167,6 +167,11 @@ class Bootloader {
         terminal.init(window.RetroWeb.windowManager, window.RetroWeb.vfs);
         window.RetroWeb.terminal = terminal;
         console.log("[BOOTLOADER] Terminal initialized");
+
+        const { paint } = await import("../apps/paint.js");
+        paint.init(window.RetroWeb.windowManager, window.RetroWeb.vfs);
+        window.RetroWeb.paint = paint;
+        console.log("[BOOTLOADER] Paint initialized");
       } catch (error) {
         console.warn("[BOOTLOADER] Some apps failed to load:", error);
       }

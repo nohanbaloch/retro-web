@@ -55,7 +55,8 @@ class Desktop {
             { name: 'Recycle Bin', icon: '🗑️', x: 0, y: 2, action: 'recyclebin' },
             { name: 'Notepad', icon: '📝', x: 0, y: 3, action: 'notepad' },
             { name: 'Terminal', icon: '⌨️', x: 0, y: 4, action: 'terminal' },
-            { name: 'GitHub', icon: '🐙', x: 0, y: 5, action: 'github' }
+            { name: 'Paint', icon: '🎨', x: 0, y: 5, action: 'paint' },
+            { name: 'GitHub', icon: '🐙', x: 0, y: 6, action: 'github' }
         ];
 
         defaultIcons.forEach(iconData => {
@@ -187,6 +188,9 @@ class Desktop {
             case 'terminal':
                 this.launchApp('Terminal', '⌨️');
                 break;
+            case 'paint':
+                this.launchApp('Paint', '🎨');
+                break;
             case 'github':
                 window.open('https://github.com/nohanbaloch/retro-web', '_blank');
                 break;
@@ -234,6 +238,12 @@ class Desktop {
             case 'command prompt':
                 if (window.RetroWeb?.terminal) {
                     window.RetroWeb.terminal.open();
+                    return;
+                }
+                break;
+            case 'paint':
+                if (window.RetroWeb?.paint) {
+                    window.RetroWeb.paint.open();
                     return;
                 }
                 break;
