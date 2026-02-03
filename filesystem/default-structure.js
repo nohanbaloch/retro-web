@@ -79,6 +79,14 @@ class DefaultStructure {
         const temp = this.createDir('temp', 'Temp', 'C:\\Windows\\Temp', 'windows', { hidden: true });
         structure.push(temp);
 
+        // System Cache
+        const systemCache = this.createDir('system_cache', 'Cache', 'C:\\Windows\\Cache', 'windows', { system: true, hidden: true });
+        structure.push(systemCache);
+
+        // User Config
+        const userConfig = this.createDir('user_config', 'Config', 'C:\\Documents and Settings\\User\\Config', 'user_folder', { hidden: false });
+        structure.push(userConfig);
+
         // Recycle Bin
         const recycleBin = this.createDir('recycle_bin', 'Recycle Bin', 'C:\\Recycle Bin', 'root_c', { system: true, hidden: true });
         structure.push(recycleBin);
@@ -86,9 +94,9 @@ class DefaultStructure {
         // Update parent-child relationships
         root.children = ['docs_settings', 'program_files', 'windows', 'recycle_bin'];
         docsAndSettings.children = ['user_folder'];
-        userFolder.children = ['desktop', 'my_documents', 'start_menu', 'app_data'];
+        userFolder.children = ['desktop', 'my_documents', 'start_menu', 'app_data', 'user_config'];
         myDocuments.children = ['my_pictures', 'my_music', 'my_videos'];
-        windows.children = ['system32', 'temp'];
+        windows.children = ['system32', 'temp', 'system_cache'];
 
         // Add sample files
         structure.push(...this.createSampleFiles());
@@ -226,6 +234,8 @@ Profile=C:\\Documents and Settings\\User`,
             windows: 'C:\\Windows',
             system32: 'C:\\Windows\\System32',
             temp: 'C:\\Windows\\Temp',
+            systemCache: 'C:\\Windows\\Cache',
+            userConfig: 'C:\\Documents and Settings\\User\\Config',
             recycleBin: 'C:\\Recycle Bin'
         };
     }

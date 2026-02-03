@@ -126,6 +126,7 @@ class Bootloader {
       "../system/desktop.js",
       "../system/taskbar.js",
       "../system/start-menu.js",
+      "../system/input-manager.js",
       "../system/notification-center.js",
       "../system/power-manager.js",
       "../services/settings.js",
@@ -177,6 +178,11 @@ class Bootloader {
         controlPanel.init(window.RetroWeb.windowManager, window.RetroWeb.vfs);
         window.RetroWeb.controlPanel = controlPanel;
         console.log("[BOOTLOADER] Control Panel initialized");
+
+        const { calculator } = await import("../apps/calculator.js");
+        calculator.init(window.RetroWeb.windowManager);
+        window.RetroWeb.calculator = calculator;
+        console.log("[BOOTLOADER] Calculator initialized");
       } catch (error) {
         console.warn("[BOOTLOADER] Some apps failed to load:", error);
       }

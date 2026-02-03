@@ -5,7 +5,7 @@
 ### *A Nostalgic Journey Back to Windows XP*
 
 [![Version](https://img.shields.io/badge/version-0.4.0-blue.svg)](https://github.com/nohanbaloch/retro-web)
-[![Phase](https://img.shields.io/badge/phase-4%20in%20progress-yellow.svg)](https://github.com/nohanbaloch/retro-web)
+[![Phase](https://img.shields.io/badge/phase-5%20in%20progress-yellow.svg)](https://github.com/nohanbaloch/retro-web)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![JavaScript](https://img.shields.io/badge/javascript-vanilla-yellow.svg)](https://github.com/nohanbaloch/retro-web)
 
@@ -104,13 +104,14 @@
 - ✅ Persistent storage across page reloads
 - ✅ Event-driven file system operations
 
-### 🖥️ Phase 4: Built-in Applications 🚧 **IN PROGRESS**
+### 🖥️ Phase 4: Built-in Applications ✅ **COMPLETE**
 
 - ✅ **File Explorer** - Navigate folders with back/forward/up buttons & address bar
 - ✅ **Notepad** - Full text editor with File/Edit/Format menus & VFS integration
 - ✅ **Terminal** - Command prompt with 15+ commands & VFS integration
-- 🔨 Paint application
-- 🔨 Control Panel
+- ✅ **Paint** - Full drawing application with tools and VFS support
+- ✅ **Control Panel** - System settings, themes, and user configuration
+- ✅ **Calculator** - Basic arithmetic and memory functions
 
 ---
 
@@ -204,16 +205,16 @@ Then navigate to `http://localhost:8080` in your browser.
 <td><em>Complete</em></td>
 </tr>
 <tr>
-<td align="center">🚧</td>
+<td align="center">✅</td>
 <td><strong>Phase 4</strong></td>
 <td>Built-in Applications</td>
-<td><em>Next</em></td>
+<td><em>Complete</em></td>
 </tr>
 <tr>
-<td align="center">📋</td>
+<td align="center">🚧</td>
 <td><strong>Phase 5</strong></td>
 <td>Advanced Features</td>
-<td><em>Planned</em></td>
+<td><em>In Progress</em></td>
 </tr>
 </table>
 

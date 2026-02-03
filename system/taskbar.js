@@ -43,20 +43,7 @@ class Taskbar {
      */
     render() {
         this.container.innerHTML = '';
-        this.container.style.cssText = `
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 40px;
-            background: linear-gradient(to bottom, #245EDC, #1941A5);
-            border-top: 2px solid #0831D9;
-            display: flex;
-            align-items: center;
-            padding: 0;
-            z-index: 9999;
-            user-select: none;
-        `;
+        // Inline styles removed - relying on CSS
 
         // Start button
         const startButton = this.createStartButton();
@@ -69,16 +56,7 @@ class Taskbar {
         // Window buttons area
         const windowArea = document.createElement('div');
         windowArea.id = 'taskbar-windows';
-        windowArea.style.cssText = `
-            flex: 1;
-            display: flex;
-            gap: 4px;
-            padding: 0 4px;
-            overflow-x: auto;
-            overflow-y: hidden;
-        `;
-        windowArea.style.scrollbarWidth = 'none'; // Firefox
-        windowArea.style.msOverflowStyle = 'none'; // IE/Edge
+        // Inline styles removed
         this.container.appendChild(windowArea);
 
         // System tray
@@ -97,53 +75,14 @@ class Taskbar {
         const button = document.createElement('button');
         button.id = 'start-button';
         button.innerHTML = `
-            <span style="font-weight: bold; font-style: italic; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
-                Start
-            </span>
+            <span class="start-text">Start</span>
         `;
-        button.style.cssText = `
-            height: 36px;
-            padding: 0 20px 0 8px;
-            margin: 2px 4px;
-            background: linear-gradient(to bottom, #3FA142, #2D8A2F);
-            border: 1px solid #1E5E1F;
-            border-radius: 0 18px 18px 0;
-            color: white;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);
-            position: relative;
-        `;
-
+        
         // Windows logo (simplified)
         const logo = document.createElement('span');
+        logo.className = 'start-logo';
         logo.innerHTML = '⊞';
-        logo.style.cssText = `
-            font-size: 20px;
-            font-weight: bold;
-            color: white;
-        `;
         button.insertBefore(logo, button.firstChild);
-
-        // Hover effect
-        button.addEventListener('mouseenter', () => {
-            button.style.background = 'linear-gradient(to bottom, #4FB14F, #3A9A3A)';
-        });
-        button.addEventListener('mouseleave', () => {
-            button.style.background = 'linear-gradient(to bottom, #3FA142, #2D8A2F)';
-        });
-
-        // Active state
-        button.addEventListener('mousedown', () => {
-            button.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.3)';
-        });
-        button.addEventListener('mouseup', () => {
-            button.style.boxShadow = 'inset 0 1px 0 rgba(255,255,255,0.3)';
-        });
 
         return button;
     }
@@ -154,39 +93,22 @@ class Taskbar {
     createQuickLaunch() {
         const container = document.createElement('div');
         container.id = 'quick-launch';
-        container.style.cssText = `
-            display: flex;
-            gap: 2px;
-            padding: 0 8px;
-            border-right: 1px solid rgba(255,255,255,0.2);
-            margin-right: 4px;
-        `;
 
-        // Add some default quick launch icons (placeholders for now)
-        const icons = ['🌐', '📁', '📝'];
-        icons.forEach(icon => {
+        // Add some default quick launch icons
+        const apps = [
+            { icon: '🌐', name: 'Browser', action: 'browser' },
+            { icon: '📁', name: 'Explorer', action: 'explorer' },
+            { icon: '📝', name: 'Notepad', action: 'notepad' }
+        ];
+
+        apps.forEach(app => {
             const btn = document.createElement('button');
-            btn.textContent = icon;
-            btn.style.cssText = `
-                width: 32px;
-                height: 32px;
-                background: rgba(255,255,255,0.1);
-                border: 1px solid transparent;
-                border-radius: 2px;
-                cursor: pointer;
-                font-size: 16px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            `;
+            btn.className = 'quick-launch-btn';
+            btn.textContent = app.icon;
+            btn.title = app.name;
             
-            btn.addEventListener('mouseenter', () => {
-                btn.style.background = 'rgba(255,255,255,0.2)';
-                btn.style.borderColor = 'rgba(255,255,255,0.3)';
-            });
-            btn.addEventListener('mouseleave', () => {
-                btn.style.background = 'rgba(255,255,255,0.1)';
-                btn.style.borderColor = 'transparent';
+            btn.addEventListener('click', () => {
+                this.launchQuickApp(app.action);
             });
             
             container.appendChild(btn);
@@ -196,38 +118,44 @@ class Taskbar {
     }
 
     /**
+     * Launch app from quick launch
+     */
+    launchQuickApp(action) {
+        // Simple dispatcher
+        switch (action) {
+            case 'explorer':
+                if (window.RetroWeb?.explorer) window.RetroWeb.explorer.open('C:\\', 'My Computer');
+                break;
+            case 'notepad':
+                if (window.RetroWeb?.notepad) window.RetroWeb.notepad.open();
+                break;
+            case 'browser':
+                // rudimentary or alert
+                if (window.RetroWeb?.windowManager) {
+                     window.RetroWeb.windowManager.createWindow({
+                         title: 'Web Browser',
+                         width: 800,
+                         height: 600,
+                         content: '<div style="padding:20px; text-align:center;">Internet not connected.</div>'
+                     });
+                }
+                break;
+        }
+    }
+
+    /**
      * Create system tray
      */
     createSystemTray() {
         const tray = document.createElement('div');
         tray.id = 'system-tray';
-        tray.style.cssText = `
-            display: flex;
-            gap: 4px;
-            padding: 0 8px;
-            border-left: 1px solid rgba(255,255,255,0.2);
-            align-items: center;
-        `;
 
         // Add system icons
         const icons = ['🔊', '🌐', '🔔'];
         icons.forEach(icon => {
             const iconEl = document.createElement('span');
+            iconEl.className = 'tray-icon';
             iconEl.textContent = icon;
-            iconEl.style.cssText = `
-                font-size: 14px;
-                cursor: pointer;
-                padding: 4px;
-                border-radius: 2px;
-            `;
-            
-            iconEl.addEventListener('mouseenter', () => {
-                iconEl.style.background = 'rgba(255,255,255,0.2)';
-            });
-            iconEl.addEventListener('mouseleave', () => {
-                iconEl.style.background = 'transparent';
-            });
-            
             tray.appendChild(iconEl);
         });
 
@@ -240,26 +168,8 @@ class Taskbar {
     createClock() {
         const clock = document.createElement('div');
         clock.id = 'taskbar-clock';
-        clock.style.cssText = `
-            padding: 0 12px;
-            color: white;
-            font-size: 11px;
-            text-align: center;
-            min-width: 70px;
-            cursor: pointer;
-            border-radius: 2px;
-        `;
-
-        clock.addEventListener('mouseenter', () => {
-            clock.style.background = 'rgba(255,255,255,0.2)';
-        });
-        clock.addEventListener('mouseleave', () => {
-            clock.style.background = 'transparent';
-        });
-
         this.clockElement = clock;
         this.updateClock();
-
         return clock;
     }
 
@@ -274,40 +184,24 @@ class Taskbar {
 
         const button = document.createElement('button');
         button.id = `taskbar-btn-${windowId}`;
+        button.className = 'taskbar-btn';
         button.dataset.windowId = windowId;
-        button.style.cssText = `
-            min-width: 160px;
-            max-width: 200px;
-            height: 32px;
-            padding: 0 8px;
-            background: linear-gradient(to bottom, #3C7DDE, #2456C1);
-            border: 1px solid #0831D9;
-            border-radius: 3px;
-            color: white;
-            font-size: 11px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
-        `;
 
         // Icon
         const iconEl = document.createElement('span');
         iconEl.textContent = icon;
-        iconEl.style.fontSize = '14px';
+        iconEl.className = 'btn-icon';
         button.appendChild(iconEl);
 
         // Title
         const titleEl = document.createElement('span');
         titleEl.textContent = title;
+        titleEl.className = 'btn-title';
         titleEl.style.cssText = `
             flex: 1;
             overflow: hidden;
             text-overflow: ellipsis;
+            white-space: nowrap;
             text-align: left;
         `;
         button.appendChild(titleEl);
@@ -339,17 +233,9 @@ class Taskbar {
         // Reset all buttons
         this.windowButtons.forEach((button, id) => {
             if (id === windowId) {
-                // Active state
-                button.style.background = 'linear-gradient(to bottom, #ECE9D8, #D6D3CE)';
-                button.style.color = '#000';
-                button.style.borderColor = '#0831D9';
-                button.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2)';
+                button.classList.add('active');
             } else {
-                // Inactive state
-                button.style.background = 'linear-gradient(to bottom, #3C7DDE, #2456C1)';
-                button.style.color = 'white';
-                button.style.borderColor = '#0831D9';
-                button.style.boxShadow = 'inset 0 1px 0 rgba(255,255,255,0.2)';
+                button.classList.remove('active');
             }
         });
     }
@@ -362,8 +248,7 @@ class Taskbar {
         if (!button) return;
 
         if (state === 'minimized') {
-            button.style.background = 'linear-gradient(to bottom, #3C7DDE, #2456C1)';
-            button.style.color = 'white';
+            button.classList.remove('active');
         }
     }
 
@@ -393,11 +278,23 @@ class Taskbar {
      * Attach event listeners
      */
     attachEventListeners() {
-        const startButton = document.getElementById('start-button');
-        if (startButton) {
-            startButton.addEventListener('click', () => {
-                this.toggleStartMenu();
-            });
+        // Delegate for start button since it might be re-rendered?
+        // Actually we append it in render, so we can just attach to it there?
+        // But `render` clears html.
+        // Let's attach to container for delegation or re-attach in render?
+        // createStartButton doesn't add listener.
+        // Let's rely on delegation or re-attach.
+        // Ideally render handles it.
+        const startBtn = document.getElementById('start-button');
+        if (startBtn) {
+            startBtn.addEventListener('click', () => this.toggleStartMenu());
+        } else {
+            // Wait for render? Render is called in init.
+            // If attachEventListeners is called after render, we good.
+            setTimeout(() => {
+                const btn = document.getElementById('start-button');
+                if(btn) btn.addEventListener('click', () => this.toggleStartMenu());
+            }, 0);
         }
     }
 
@@ -427,49 +324,10 @@ class Taskbar {
         const now = new Date();
         const hours = now.getHours().toString().padStart(2, '0');
         const minutes = now.getMinutes().toString().padStart(2, '0');
-        const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
         
         const time = `${hours}:${minutes}`;
         
-        this.clockElement.innerHTML = `
-            <div style="line-height: 1.2;">
-                <div style="font-weight: bold;">${time}</div>
-            </div>
-        `;
-    }
-
-    /**
-     * Show notification badge
-     */
-    showNotificationBadge(count) {
-        const tray = document.getElementById('system-tray');
-        if (!tray) return;
-
-        let badge = tray.querySelector('.notification-badge');
-        if (!badge) {
-            badge = document.createElement('span');
-            badge.className = 'notification-badge';
-            badge.style.cssText = `
-                position: absolute;
-                top: 4px;
-                right: 4px;
-                background: #E81123;
-                color: white;
-                border-radius: 50%;
-                width: 16px;
-                height: 16px;
-                font-size: 9px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: bold;
-            `;
-            tray.style.position = 'relative';
-            tray.appendChild(badge);
-        }
-
-        badge.textContent = count > 9 ? '9+' : count;
-        badge.style.display = count > 0 ? 'flex' : 'none';
+        this.clockElement.textContent = time;
     }
 }
 

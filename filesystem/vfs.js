@@ -40,6 +40,9 @@ class VFS {
                 console.log('[VFS] Filesystem already initialized, loading...');
             }
 
+            // Ensure all system folders exist (for updates)
+            await this.ensureSystemFolders();
+
             // Build cache
             await this.buildCache();
 
@@ -66,6 +69,35 @@ class VFS {
         }
 
         console.log(`[VFS] Created ${entries.length} default entries`);
+    }
+
+    /**
+     * Ensure critical system folders exist
+     */
+    async ensureSystemFolders() {
+        const folders = [
+            { path: 'C:\\Windows\\Cache', system: true, hidden: true },
+            { path: 'C:\\Documents and Settings\\User\\Config', system: false, hidden: false }
+        ];
+
+        for (const folder of folders) {
+            const exists = await this.storage.getEntryByPath(folder.path);
+            if (!exists) {
+                try {
+                    // We need to construct the full entry manually or use existing createDir logic
+                    // But createDirectory relies on parent existing.
+                    // Since these are deep paths, we assume parents exist for now (as standard structure)
+                    // or recursively create.
+                    await this.createDirectory(folder.path); 
+                    console.log(`[VFS] Entured folder: ${folder.path}`);
+                    
+                    // Apply attributes if needed (not supported by createDirectory directly yet, but default is standard)
+                    // If we strictly need system/hidden attributes we might need to update the entry after creation.
+                } catch (e) {
+                    console.warn(`[VFS] Failed to ensure folder ${folder.path}:`, e);
+                }
+            }
+        }
     }
 
     /**

@@ -260,7 +260,7 @@ class ControlPanel {
                     <label style="font-weight: bold; font-size: 12px;">Theme:</label>
                     <select id="theme-select" style="width: 200px; padding: 4px;">
                         <option value="windows-xp">Windows XP</option>
-                        <option value="classic">Windows Classic</option>
+                        <option value="classic">Windows 98</option>
                     </select>
                 </div>
 

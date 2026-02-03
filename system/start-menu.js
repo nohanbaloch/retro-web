@@ -59,8 +59,12 @@ class StartMenu {
         `;
 
         // Left panel (user info and frequently used)
-        const leftPanel = this.createLeftPanel();
-        this.container.appendChild(leftPanel);
+        this.leftPanel = this.createLeftPanel();
+        this.container.appendChild(this.leftPanel);
+
+        // All Programs Menu (hidden by default)
+        this.allProgramsMenu = this.createAllProgramsMenu();
+        this.container.appendChild(this.allProgramsMenu);
 
         // Right panel (all programs, settings, power)
         const rightPanel = this.createRightPanel();
@@ -273,6 +277,150 @@ class StartMenu {
     }
 
     /**
+     * Create All Programs menu overlay
+     */
+    createAllProgramsMenu() {
+        const menu = document.createElement('div');
+        menu.className = 'start-menu-programs';
+        menu.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 240px; 
+            height: 100%;
+            background: white;
+            display: none;
+            flex-direction: column;
+            border-right: 1px solid #D6D3CE;
+            z-index: 100;
+        `;
+
+        // User profile section (compact)
+        const header = document.createElement('div');
+        header.style.cssText = `
+            padding: 8px 12px;
+            background: linear-gradient(to bottom, #5A7EDC 0%, #3C5FBF 100%);
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            border-bottom: 1px solid #0831D9;
+        `;
+        header.innerHTML = '‹ Back';
+        header.onclick = () => this.hideAllPrograms();
+        menu.appendChild(header);
+
+        // Programs list
+        const list = document.createElement('div');
+        list.style.cssText = `
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+            background: white;
+        `;
+
+        // Sample Program Groups
+        const programs = [
+            { name: 'Accessories', icon: '📁', submenu: [
+                { name: 'Notepad', icon: '📝', action: 'notepad' },
+                { name: 'Paint', icon: '🎨', action: 'paint' },
+                { name: 'Calculator', icon: '🧮', action: 'calculator' },
+            ]},
+            { name: 'System Tools', icon: '📁', submenu: [
+                { name: 'File Explorer', icon: '📁', action: 'explorer' },
+                { name: 'Terminal', icon: '⌨️', action: 'terminal' },
+                { name: 'Control Panel', icon: '⚙️', action: 'controlpanel' },
+            ]},
+            { name: 'Games', icon: '📁', submenu: [
+                { name: 'Minesweeper', icon: '💣', action: 'minesweeper' },
+                { name: 'Solitaire', icon: '🃏', action: 'solitaire' },
+            ]},
+            { name: 'Startup', icon: '📁', submenu: [] },
+            { name: 'GitHub', icon: '🐙', action: 'github' }
+        ];
+
+        programs.forEach(item => {
+            const el = document.createElement('div');
+            el.style.cssText = `
+                padding: 4px 12px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+                font-size: 11px;
+            `;
+            
+            el.innerHTML = `<span style="width: 16px; text-align: center;">${item.icon}</span> ${item.name}`;
+            
+            el.onmouseenter = () => el.style.background = '#316AC5';
+            el.onmouseenter = () => el.style.color = 'white';
+            el.onmouseleave = () => {
+                el.style.background = 'transparent';
+                el.style.color = 'black';
+            };
+
+            if (item.submenu) {
+                // Expandable folder logic could go here
+                // For now, just click to toggle or simple list
+                el.innerHTML += ' <span style="font-size: 8px; margin-left: auto;">▶</span>';
+                
+                // Clicking opens submenu? 
+                // For simplicity in this iteration, let's just flatten the interesting ones or make them click to expand
+                // Let's just create a flat list for now or a simple toggle
+                
+                const subContainer = document.createElement('div');
+                subContainer.style.display = 'none';
+                subContainer.style.paddingLeft = '20px';
+                
+                item.submenu.forEach(sub => {
+                    const subEl = document.createElement('div');
+                    subEl.style.cssText = `
+                        padding: 4px 12px;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        cursor: pointer;
+                        font-size: 11px;
+                        color: black;
+                    `;
+                    subEl.innerHTML = `<span style="width: 16px; text-align: center;">${sub.icon}</span> ${sub.name}`;
+                    subEl.onmouseenter = (e) => {
+                         e.stopPropagation();
+                         subEl.style.background = '#316AC5';
+                         subEl.style.color = 'white';
+                    };
+                    subEl.onmouseleave = (e) => {
+                         e.stopPropagation();
+                         subEl.style.background = 'transparent';
+                         subEl.style.color = 'black';
+                    };
+                    subEl.onclick = (e) => {
+                        e.stopPropagation();
+                        this.handleMenuItemClick(sub.action);
+                    };
+                    subContainer.appendChild(subEl);
+                });
+
+                el.onclick = () => {
+                    const isVisible = subContainer.style.display === 'block';
+                    subContainer.style.display = isVisible ? 'none' : 'block';
+                };
+                
+                list.appendChild(el);
+                list.appendChild(subContainer);
+            } else {
+                el.onclick = () => this.handleMenuItemClick(item.action);
+                list.appendChild(el);
+            }
+        });
+
+        menu.appendChild(list);
+        return menu;
+    }
+
+    /**
      * Create All Programs button
      */
     createAllProgramsButton() {
@@ -336,11 +484,22 @@ class StartMenu {
             case 'paint':
                 this.launchApp('Paint', '🎨');
                 break;
+            case 'calculator':
+                this.launchApp('Calculator', '🧮');
+                break;
             case 'controlpanel':
                 this.launchApp('Control Panel', '⚙️');
                 break;
             case 'github':
                 window.open('https://github.com/nohanbaloch/retro-web', '_blank');
+                break;
+            case 'search':
+                this.openSearch();
+                break;
+            case 'run':
+                // TODO: Implement Run dialog
+                // Reuse search for now or modal
+                this.openSearch(); 
                 break;
             case 'shutdown':
                 this.handleShutdown();
@@ -376,6 +535,12 @@ class StartMenu {
             case 'paint':
                 if (window.RetroWeb?.paint) {
                     window.RetroWeb.paint.open();
+                    return;
+                }
+                break;
+            case 'calculator':
+                if (window.RetroWeb?.calculator) {
+                    window.RetroWeb.calculator.open();
                     return;
                 }
                 break;
@@ -446,8 +611,127 @@ class StartMenu {
      * Show all programs submenu
      */
     showAllPrograms() {
-        console.log('[START-MENU] All Programs clicked');
-        // TODO: Implement submenu
+        if (this.allProgramsMenu) {
+            this.allProgramsMenu.style.display = 'flex';
+            this.allProgramsMenu.classList.add('slide-in');
+        }
+    }
+
+    hideAllPrograms() {
+        if (this.allProgramsMenu) {
+            this.allProgramsMenu.style.display = 'none';
+        }
+    }
+
+    /**
+     * Open Search Window
+     */
+    openSearch() {
+        if (!window.RetroWeb?.windowManager) return;
+
+        const win = window.RetroWeb.windowManager.createWindow({
+            title: 'Search Results',
+            width: 500,
+            height: 400,
+            content: `
+                <div style="display: flex; flex-direction: column; height: 100%; padding: 10px; box-sizing: border-box; background: #ECE9D8;">
+                    <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                        <input type="text" id="search-input" placeholder="Search for files or folders..." 
+                            style="flex: 1; padding: 6px; border: 1px solid #7F9DB9;" autofocus>
+                        <button id="search-btn" class="sys-btn" style="padding: 0 15px;">Search</button>
+                    </div>
+                    <div style="flex: 1; background: white; border: 1px solid #7F9DB9; overflow-y: auto; padding: 5px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                            <thead>
+                                <tr style="text-align: left; border-bottom: 1px solid #ccc; color: #666;">
+                                    <th style="padding: 4px;">Name</th>
+                                    <th style="padding: 4px;">In Folder</th>
+                                    <th style="padding: 4px;">Size</th>
+                                </tr>
+                            </thead>
+                            <tbody id="search-results">
+                                <tr><td colspan="3" style="padding: 10px; text-align: center; color: #999;">Enter a search term to begin</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="search-status" style="margin-top: 5px; font-size: 10px; color: #666;">Ready</div>
+                </div>
+            `
+        });
+
+        const input = win.element.querySelector('#search-input');
+        const btn = win.element.querySelector('#search-btn');
+        const resultsBody = win.element.querySelector('#search-results');
+        const status = win.element.querySelector('#search-status');
+
+        const performSearch = async () => {
+            const term = input.value.trim();
+            if (!term) return;
+
+            status.textContent = 'Searching...';
+            resultsBody.innerHTML = '<tr><td colspan="3" style="padding: 10px; text-align: center;">Searching...</td></tr>';
+
+            try {
+                // If VFS is available
+                if (window.RetroWeb?.vfs) {
+                    const results = await window.RetroWeb.vfs.search(term);
+                    
+                    resultsBody.innerHTML = '';
+                    
+                    if (results.length === 0) {
+                        resultsBody.innerHTML = '<tr><td colspan="3" style="padding: 10px; text-align: center;">No results found.</td></tr>';
+                    } else {
+                        results.forEach(file => {
+                            const tr = document.createElement('tr');
+                            tr.style.cursor = 'pointer';
+                            tr.innerHTML = `
+                                <td style="padding: 4px;">
+                                    <span style="margin-right: 4px;">${file.type === 'directory' ? '📁' : '📄'}</span>
+                                    ${file.name}
+                                </td>
+                                <td style="padding: 4px; color: #666;">${file.path.substring(0, file.path.lastIndexOf('\\')) || 'C:\\'}</td>
+                                <td style="padding: 4px; color: #666;">${file.type === 'file' ? (file.size || 0) + ' B' : ''}</td>
+                            `;
+                            
+                            tr.onmouseover = () => tr.style.background = '#E8F1FF';
+                            tr.onmouseout = () => tr.style.background = 'transparent';
+                            
+                            tr.onclick = () => {
+                                if (file.type === 'directory') {
+                                    window.RetroWeb.explorer?.open(file.path);
+                                } else {
+                                    // Open file location or file itself?
+                                    // Let's try to open the file
+                                    // Determine app based on extension or generic
+                                    // For now, assume Explorer handles it or launch Notepad
+                                    // Better: Open parent folder in explorer and select it?
+                                    // Let's just open parent folder
+                                    const parent = file.path.substring(0, file.path.lastIndexOf('\\')) || 'C:\\';
+                                    window.RetroWeb.explorer?.open(parent);
+                                }
+                                // Close search window? No, keep it open
+                            };
+
+                            resultsBody.appendChild(tr);
+                        });
+                    }
+                    status.textContent = `${results.length} objects found.`;
+                } else {
+                    status.textContent = 'File system not available.';
+                }
+            } catch (err) {
+                console.error(err);
+                status.textContent = 'Search failed.';
+            }
+        };
+
+        btn.onclick = performSearch;
+        input.onkeydown = (e) => {
+            if (e.key === 'Enter') performSearch();
+        };
+        
+        // Focus input
+        setTimeout(() => input.focus(), 100);
     }
 
     /**

@@ -1,15 +1,19 @@
 /**
- * Windows Classic Theme
- * Windows 95/98/2000 style
+ * Windows 98 Theme
+ * Windows 98/2000 style
  */
 
 :root {
-  --xp-blue: #000080;
-  --xp-blue-dark: #000040;
-  --xp-blue-light: #c0c0c0;
-  --xp-gray: #c0c0c0;
-  --xp-border: #808080;
-  --xp-shadow: none;
+  --win-face: #c0c0c0;
+  --win-highlight: #ffffff;
+  --win-light: #dfdfdf;
+  --win-shadow: #808080;
+  --win-dark-shadow: #000000;
+  --win-text: #000000;
+  --win-caps: #000080;
+  --win-caps-grad: #1084d0;
+  --win-caps-text: #ffffff;
+  --desktop-bg: #008080;
 }
 
 * {
@@ -19,46 +23,286 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: "MS Sans Serif", "Tahoma", sans-serif;
+  font-family: "MS Sans Serif", "Microsoft Sans Serif", "Tahoma", sans-serif;
   font-size: 11px;
   overflow: hidden;
   background-color: #000;
+  color: var(--win-text);
+  -webkit-font-smoothing: none;
 }
 
+/* Desktop */
 #desktop-container {
-  background: #008080; /* Teal background */
+  background: var(--desktop-bg);
+  background-image: none !important;
 }
 
 #desktop {
   width: 100%;
-  height: calc(100% - 28px); /* Classic taskbar is thinner approx 28px */
+  height: calc(100% - 28px);
   position: relative;
 }
 
+/* Taskbar */
 #taskbar {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
   height: 28px;
-  background: #c0c0c0;
-  border-top: 2px solid #fefefe;
+  background: var(--win-face) !important;
+  border-top: 1px solid var(--win-highlight) !important;
+  box-shadow: none !important;
+  padding: 2px;
   display: flex;
   align-items: center;
-  padding: 2px;
-  box-shadow: inset 0 1px 0 #fefefe;
+  gap: 2px;
+  z-index: 9000;
 }
 
+/* Start Button */
+#start-button {
+  height: 22px;
+  padding: 2px 6px !important;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--win-face) !important;
+  border-top: 1px solid var(--win-highlight);
+  border-left: 1px solid var(--win-highlight);
+  border-right: 1px solid var(--win-dark-shadow);
+  border-bottom: 1px solid var(--win-dark-shadow);
+  box-shadow: 1px 1px 0 var(--win-shadow), -1px -1px 0 var(--win-light) inset !important;
+  border-radius: 0 !important;
+  font-weight: bold;
+  font-style: italic;
+  font-family: "MS Sans Serif", sans-serif;
+  color: #000 !important;
+  cursor: pointer;
+  margin: 0 !important;
+}
+
+#start-button:active, #start-button.active {
+  border-top: 1px solid var(--win-dark-shadow);
+  border-left: 1px solid var(--win-dark-shadow);
+  border-right: 1px solid var(--win-highlight);
+  border-bottom: 1px solid var(--win-highlight);
+  box-shadow: none !important;
+  padding: 3px 5px 1px 7px !important; /* Shift text */
+}
+
+.start-text {
+  font-style: italic;
+  font-weight: bold;
+  color: black;
+  text-shadow: none !important;
+}
+
+.start-logo {
+  font-weight: bold;
+  color: black;
+}
+
+/* Quick Launch */
+#quick-launch {
+  border-right: 1px solid var(--win-shadow) !important;
+  box-shadow: 1px 0 0 var(--win-highlight); /* Bevel divider */
+  margin-right: 4px;
+  padding-right: 4px;
+}
+
+.quick-launch-btn {
+  width: 22px !important;
+  height: 22px !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 0 !important;
+  margin: 0;
+  font-size: 14px;
+  color: black !important;
+}
+
+.quick-launch-btn:hover {
+  background: transparent !important;
+  border-top: 1px solid var(--win-highlight) !important;
+  border-left: 1px solid var(--win-highlight) !important;
+  border-right: 1px solid var(--win-shadow) !important;
+  border-bottom: 1px solid var(--win-shadow) !important;
+}
+
+/* Taskbar Windows */
+#taskbar-windows {
+  gap: 2px;
+  scrollbar-width: none;
+}
+
+.taskbar-btn {
+  height: 22px !important;
+  background: var(--win-face) !important;
+  border-top: 1px solid var(--win-highlight) !important;
+  border-left: 1px solid var(--win-highlight) !important;
+  border-right: 1px solid var(--win-dark-shadow) !important;
+  border-bottom: 1px solid var(--win-dark-shadow) !important;
+  box-shadow: 1px 1px 0 var(--win-shadow) !important;
+  color: black !important;
+  border-radius: 0 !important;
+  margin: 0;
+  max-width: 150px;
+}
+
+.taskbar-btn.active {
+  background: #eeeeee !important; /* Dotted pattern usually, let's use light gray or checkerboard url? */
+  /* Actually pushed button state */
+  border-top: 1px solid var(--win-dark-shadow) !important;
+  border-left: 1px solid var(--win-dark-shadow) !important;
+  border-right: 1px solid var(--win-highlight) !important;
+  border-bottom: 1px solid var(--win-highlight) !important;
+  box-shadow: none !important;
+  /* padding shift applied by default browser button pushed? or we simulate */
+  transform: none !important; /* Reset generic active transform */
+}
+
+/* System Tray */
+#system-tray {
+  border-left: 1px solid var(--win-shadow) !important;
+  box-shadow: -1px 0 0 var(--win-highlight) !important; /* Bevel divider */
+  padding-left: 4px;
+  background: var(--win-face);
+  color: black !important;
+}
+
+.tray-icon {
+  color: black !important;
+}
+
+#taskbar-clock {
+  color: black !important;
+  border: 1px solid;
+  border-color: var(--win-shadow) var(--win-highlight) var(--win-highlight) var(--win-shadow);
+  background: transparent;
+  padding: 0 4px;
+  min-width: 0; 
+}
+
+
+/* Windows */
 .window {
   font-family: "MS Sans Serif", sans-serif;
-  border: 2px solid;
-  border-color: #fefefe #808080 #808080 #fefefe;
-  background: #c0c0c0;
+  background: var(--win-face);
+  border: 2px solid var(--win-face);
+  box-shadow: 
+    -1px -1px 0 var(--win-dark-shadow) inset,
+    1px 1px 0 var(--win-highlight) inset,
+    -2px -2px 0 var(--win-shadow) inset,
+    2px 2px 0 var(--win-light) inset;
+  border-radius: 0 !important;
 }
 
 .window-titlebar {
-  background: linear-gradient(to right, #000080, #1084d0);
-  color: white;
-  padding: 2px;
+  background: linear-gradient(to right, var(--win-caps), var(--win-caps-grad)) !important;
+  color: var(--win-caps-text);
+  padding: 3px 4px;
   font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 20px;
+}
+
+/* Window Buttons */
+.window-controls {
+  gap: 4px;
+}
+
+.window-controls button {
+  width: 16px !important;
+  height: 14px !important;
+  background: var(--win-face);
+  border-top: 1px solid var(--win-highlight);
+  border-left: 1px solid var(--win-highlight);
+  border-right: 1px solid var(--win-dark-shadow);
+  border-bottom: 1px solid var(--win-dark-shadow);
+  box-shadow: none;
+  border-radius: 0;
+  font-size: 8px;
+  line-height: 1;
+  color: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 2px;
+}
+
+.window-controls button:active {
+  border-top: 1px solid var(--win-dark-shadow);
+  border-left: 1px solid var(--win-dark-shadow);
+  border-right: 1px solid var(--win-highlight);
+  border-bottom: 1px solid var(--win-highlight);
+  padding-top: 2px;
+  padding-bottom: 0;
+}
+
+/* Window Content */
+.window-content {
+  border: 1px solid;
+  border-color: var(--win-shadow) var(--win-highlight) var(--win-highlight) var(--win-shadow);
+  margin: 2px;
+  background: white;
+}
+
+/* Desktop Icons - Icon Replacements */
+.desktop-icon > div:first-child {
+  /* Hides default emoji */
+  visibility: hidden;
+  position: relative;
+  width: 32px;
+}
+
+.desktop-icon > div:first-child::after {
+  visibility: visible;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 32px;
+  text-shadow: none;
+}
+
+/* Mapping Actions to Retro Icons */
+.desktop-icon[data-action="mycomputer"] > div:first-child::after { content: "🖥️"; }
+.desktop-icon[data-action="mydocuments"] > div:first-child::after { content: "📂"; }
+.desktop-icon[data-action="recyclebin"] > div:first-child::after { content: "🗑"; }
+.desktop-icon[data-action="notepad"] > div:first-child::after { content: "📄"; }
+.desktop-icon[data-action="terminal"] > div:first-child::after { content: "📟"; }
+.desktop-icon[data-action="paint"] > div:first-child::after { content: "🖌️"; }
+.desktop-icon[data-action="github"] > div:first-child::after { content: "🕸️"; }
+
+/* Icon Labels */
+.desktop-icon {
+  text-align: center;
+  color: white;
+}
+
+.desktop-icon > div:last-child {
+  padding: 1px 2px;
+  text-shadow: none !important;
+  margin-top: 2px;
+}
+
+.desktop-icon.selected > div:last-child {
+  background-color: var(--win-caps);
+  border: 1px dotted #ffff00;
+}
+
+/* Inputs & Buttons Generic */
+input[type="text"], textarea {
+  border: 2px solid;
+  border-color: var(--win-shadow) var(--win-highlight) var(--win-highlight) var(--win-shadow);
+  border-radius: 0 !important;
+  background: white;
+}
+
+button {
+  background: var(--win-face) !important;
+  border-radius: 0 !important;
 }
