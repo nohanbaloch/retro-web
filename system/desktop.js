@@ -78,23 +78,35 @@ class Desktop {
                 const desktopPath = 'C:\\Documents and Settings\\User\\Desktop';
                 const files = await window.RetroWeb.vfs.listDirectory(desktopPath);
                 
-                files.forEach((file, index) => {
-                    // Calculate position (start after system icons)
-                    // System icons take x=0 column usually
-                    // Let's simple grid fill: x=0, y=0..N. Then x=1..
-                    
-                    // Simple distinct positioning:
-                    // We need a smart placer.
+                const processedFiles = await Promise.all(files.map(async file => {
+                    if (file.name.endsWith('.lnk')) {
+                        try {
+                           const content = await window.RetroWeb.vfs.readFile(file.path);
+                           const data = JSON.parse(content);
+                           return {
+                               ...file,
+                               displayName: data.name || file.name.replace('.lnk',''),
+                               customIcon: data.icon,
+                               type: 'shortcut',
+                               shortcutAction: data.action
+                           };
+                        } catch(e) { return file; }
+                    }
+                    return file;
+                }));
+
+                processedFiles.forEach((file) => {
                     const pos = this.findNextPosition();
                     
                     this.addIcon({
-                        name: file.name,
-                        icon: this.getFileIcon(file.name),
+                        name: file.displayName || file.name,
+                        icon: file.type === 'shortcut' ? (file.customIcon || '🔗') : this.getFileIcon(file.name),
                         x: pos.x,
                         y: pos.y,
-                        action: 'file',
+                        action: file.type === 'shortcut' ? 'shortcut' : 'file',
                         path: file.path,
-                        type: file.type
+                        type: file.type,
+                        shortcutAction: file.shortcutAction
                     });
                 });
             } catch (e) {
@@ -141,7 +153,7 @@ class Desktop {
      * Add icon to desktop
      */
     addIcon(iconData) {
-        const { name, icon, x, y, action, path, type } = iconData;
+        const { name, icon, x, y, action, path, type, shortcutAction } = iconData;
 
         const iconElement = document.createElement('div');
         iconElement.className = 'desktop-icon';
@@ -203,7 +215,7 @@ class Desktop {
 
         // Double-click to open
         iconElement.addEventListener('dblclick', () => {
-            this.handleIconAction(action, name, icon, path, type);
+            this.handleIconAction(action, name, icon, path, type, shortcutAction);
         });
 
         // Single click to select
@@ -218,6 +230,18 @@ class Desktop {
             e.stopPropagation();
             this.selectIcon(iconElement, false); // Select on right click
             this.showIconContextMenu(e.clientX, e.clientY, iconData);
+        });
+
+        // Draggable
+        iconElement.draggable = true;
+        iconElement.addEventListener('dragstart', (e) => {
+             e.dataTransfer.setData('text/plain', JSON.stringify({
+                 path: path,
+                 name: name,
+                 type: type,
+                 source: 'desktop'
+             }));
+             e.dataTransfer.effectAllowed = 'move';
         });
 
         this.container.appendChild(iconElement);
@@ -274,10 +298,15 @@ class Desktop {
     /**
      * Handle icon action
      */
-    handleIconAction(action, name, icon, path, type) {
+    handleIconAction(action, name, icon, path, type, shortcutAction) {
         console.log(`[DESKTOP] Opening: ${name}`);
 
         switch (action) {
+            case 'shortcut':
+                if (shortcutAction && window.RetroWeb?.startMenu) {
+                    window.RetroWeb.startMenu.handleMenuItemClick(shortcutAction);
+                }
+                break;
             case 'mycomputer':
                 this.openExplorer('C:\\', 'My Computer');
                 break;
@@ -320,10 +349,108 @@ class Desktop {
         });
         
         // Remove context menu on click
+        // Remove context menu on click
         document.addEventListener('click', () => {
              const menu = document.querySelector('.context-menu');
              if(menu) menu.remove();
         });
+
+        // Drag & Drop to Desktop
+        this.container.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+
+        this.container.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            try {
+                const rawData = e.dataTransfer.getData('text/plain');
+                if (!rawData) return;
+                const data = JSON.parse(rawData);
+
+                // Handle internal rearrange
+                if (data.source === 'desktop') {
+                     const rect = this.container.getBoundingClientRect();
+                     const relX = e.clientX - rect.left;
+                     const relY = e.clientY - rect.top;
+                     
+                     const gridX = Math.floor(relX / this.gridSize);
+                     const gridY = Math.floor(relY / this.gridSize);
+                     
+                     // Find icon
+                     const iconObj = this.icons.find(i => i.path === data.path && i.name === data.name);
+                     if (iconObj) {
+                         this.moveIconToGrid(iconObj, gridX, gridY);
+                     }
+                     return;
+                }
+
+                if (!data.path) return;
+
+                const destFolder = 'C:\\Documents and Settings\\User\\Desktop\\';
+                const destPath = destFolder + data.name;
+
+                if (data.path === destPath) return;
+
+                // Move file
+                if (window.RetroWeb?.vfs) {
+                    await window.RetroWeb.vfs.moveFile(data.path, destPath);
+                    this.refresh();
+                }
+            } catch (err) {
+                console.error('[DESKTOP] Drop failed:', err);
+            }
+        });
+    }
+
+    /**
+     * Move icon to specific grid position
+     */
+    moveIconToGrid(iconObj, targetX, targetY) {
+        if (targetX < 0 || targetY < 0) return;
+        
+        // Check bounds (optional, unlimited scroll?)
+        // Let's limit to reasonable area if needed, but CSS handles overflow usually.
+        
+        const oldKey = `${iconObj.x},${iconObj.y}`;
+        const newKey = `${targetX},${targetY}`;
+        
+        if (oldKey === newKey) return;
+
+        // Check occupancy
+        const occupant = this.iconPositions.get(newKey);
+        
+        if (occupant && occupant !== iconObj.element) {
+            // Swap logic
+            // Find the occupant object
+            const occupantObj = this.icons.find(i => i.element === occupant);
+            if (occupantObj) {
+                // Move occupant to old position
+                this.updateIconPosition(occupantObj, iconObj.x, iconObj.y);
+            }
+        }
+        
+        // Move current icon to new position
+        this.updateIconPosition(iconObj, targetX, targetY);
+    }
+
+    /**
+     * Update icon position helper
+     */
+    updateIconPosition(iconObj, x, y) {
+        const oldKey = `${iconObj.x},${iconObj.y}`;
+        this.iconPositions.delete(oldKey);
+        
+        iconObj.x = x;
+        iconObj.y = y;
+        
+        const posX = x * this.gridSize + 10;
+        const posY = y * this.gridSize + 10;
+        
+        iconObj.element.style.left = `${posX}px`;
+        iconObj.element.style.top = `${posY}px`;
+        
+        this.iconPositions.set(`${x},${y}`, iconObj.element);
     }
 
     /**
@@ -346,21 +473,45 @@ class Desktop {
      */
     showIconContextMenu(x, y, iconData) {
         const items = [
-            { label: 'Open', action: () => this.handleIconAction(iconData.action, iconData.name, iconData.icon, iconData.path, iconData.type) },
+            { label: 'Open', action: () => this.handleIconAction(iconData.action, iconData.name, iconData.icon, iconData.path, iconData.type, iconData.shortcutAction) }
+        ];
+
+        // Open With
+        if (iconData.path && iconData.type !== 'directory' && window.RetroWeb?.registry) {
+            const apps = window.RetroWeb.registry.getAppsForFile(iconData.name);
+            if (apps.length > 0) {
+                items.push({
+                    label: 'Open With ▶',
+                    submenu: apps.map(app => ({
+                        label: `${app.icon} ${app.name}`,
+                        action: () => window.RetroWeb.registry.openWith(iconData.path, app.name)
+                    }))
+                });
+            }
+        }
+
+        items.push(
             { separator: true },
             { label: 'Delete', action: () => this.deleteItem(iconData) },
             { label: 'Rename', action: () => this.renameItem(iconData) },
             { separator: true },
             { label: 'Properties', action: () => alert(`Properties: ${iconData.name}`) }
-        ];
+        );
 
         // Filter for system icons (cannot delete My Computer easily here without hiding)
         if (!iconData.path) {
-            // System icon
-            // items.splice(2, 2); // remove Delete/Rename
+            // System icon - remove Delete/Rename
+            // Index 0 is Open, 1 is OpenWith(maybe), 2 is Sep, 3 is Delete...
+            // Simpler: Just filter items that have actions Delete/Rename
+            // But we just constructed it.
+            // Let's just rebuild carefully or filter.
+            // Filter out Delete/Rename by label
+            const protectedLabels = ['Delete', 'Rename'];
+            const filtered = items.filter(i => !protectedLabels.includes(i.label));
+            this.renderContextMenu(x, y, filtered);
+        } else {
+             this.renderContextMenu(x, y, items);
         }
-
-        this.renderContextMenu(x, y, items);
     }
 
     /**
@@ -385,11 +536,39 @@ class Desktop {
                 const el = document.createElement('div');
                 el.className = 'context-menu-item';
                 el.textContent = item.label;
-                el.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    menu.remove();
-                    if (item.action) item.action();
-                });
+                
+                if (item.submenu) {
+                    el.style.position = 'relative';
+                    const submenu = document.createElement('div');
+                    submenu.className = 'context-menu'; // reuse style
+                    submenu.style.left = '100%';
+                    submenu.style.top = '-5px';
+                    submenu.style.display = 'none';
+                    submenu.style.minWidth = '150px';
+                    
+                    item.submenu.forEach(subItem => {
+                        const subEl = document.createElement('div');
+                        subEl.className = 'context-menu-item';
+                        subEl.textContent = subItem.label;
+                        subEl.addEventListener('click', (e) => {
+                             e.stopPropagation();
+                             menu.remove();
+                             if (subItem.action) subItem.action();
+                        });
+                        submenu.appendChild(subEl);
+                    });
+                    
+                    el.appendChild(submenu);
+                    el.addEventListener('mouseenter', () => submenu.style.display = 'block');
+                    el.addEventListener('mouseleave', () => submenu.style.display = 'none');
+                } else {
+                    el.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        menu.remove();
+                        if (item.action) item.action();
+                    });
+                }
+                
                 menu.appendChild(el);
             }
         });

@@ -155,6 +155,7 @@ class ControlPanel {
             { id: 'display', name: 'Appearance and Themes', icon: '🎨', desc: 'Change the look of your desktop' },
             { id: 'users', name: 'User Accounts', icon: '👤', desc: 'Change user account settings' },
             { id: 'programs', name: 'Add or Remove Programs', icon: '📦', desc: 'Install or remove programs' },
+            { id: 'security', name: 'Security Settings', icon: '🛡️', desc: 'Manage application permissions' },
         ];
 
         let html = `
@@ -392,6 +393,9 @@ class ControlPanel {
              { name: 'Notepad', size: '0.5 MB' },
              { name: 'Paint', size: '1.2 MB' },
              { name: 'Terminal', size: '0.8 MB' },
+             { name: 'minesweeper', size: '0.1 MB'},
+             { name: 'calculator', size: '0.2 MB'},
+             { name: 'solitaire', size: '0.3 MB'}
         ];
 
         let html = `
@@ -430,6 +434,93 @@ class ControlPanel {
                 this.renderView(this.windowId, 'home');
             });
         }
+    }
+
+    /**
+     * Render Security Settings
+     */
+    renderSecurity(container) {
+        const permissions = window.RetroWeb.kernel.permissions;
+        const policies = permissions.policies; // Map<appName, perms[]>
+
+        let html = `
+            <div style="margin-bottom: 20px; font-size: 18px; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+                 Security Settings
+            </div>
+            <p style="margin-bottom: 15px; color: #666; font-size: 11px;">
+                Manage application permissions. Click "Revoke" to remove a permission.
+            </p>
+            
+            <div style="height: 300px; overflow-y: auto; border: 1px solid #999; background: #fff;">
+        `;
+
+        if (policies.size === 0) {
+             html += `<div style="padding: 20px; text-align: center; color: #999;">No permissions granted yet.</div>`;
+        } else {
+            policies.forEach((perms, appName) => {
+                if (perms.length > 0) {
+                    html += `
+                        <div style="padding: 10px; background: #f0f0f0; border-bottom: 1px solid #ddd; font-weight: bold;">
+                            ${appName}
+                        </div>
+                    `;
+                    perms.forEach(perm => {
+                        html += `
+                            <div style="padding: 8px 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                                <span>${perm}</span>
+                                <button class="revoke-btn" data-app="${appName}" data-perm="${perm}" style="padding: 2px 8px; font-size: 10px; color: #c00;">Revoke</button>
+                            </div>
+                        `;
+                    });
+                }
+            });
+        }
+
+        html += `</div>
+             <div style="margin-top: 10px; text-align: right;">
+                <button class="back-btn" style="padding: 5px 20px;">Back</button>
+            </div>
+        `;
+        
+        container.innerHTML = html;
+        this.addBackButton(container);
+
+        // Bind revoke buttons
+        container.querySelectorAll('.revoke-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                const appName = e.target.dataset.app;
+                const perm = e.target.dataset.perm;
+                
+                // Call kernel to revoke
+                // We need to find the process ID or object if running
+                // But permission engine can revoke by name if we updated it to support that?
+                // Currently revokePermission takes (process, perm).
+                // Let's find running process
+                const process = window.RetroWeb.kernel.processes.find(p => p.name === appName);
+                
+                if (process) {
+                     window.RetroWeb.kernel.permissions.revokePermission(process, perm);
+                } else {
+                     // Determine how to revoke offline? 
+                     // Added support directly to map in previous step?
+                     // Let's manually trigger map update if process not found
+                     const perms = policies.get(appName);
+                     if (perms) {
+                         const idx = perms.indexOf(perm);
+                         if (idx > -1) {
+                             perms.splice(idx, 1);
+                             permissions.saveTypes();
+                             // Refresh
+                             this.renderSecurity(container);
+                             return;
+                         }
+                     }
+                }
+                
+                // Refresh view
+                this.renderSecurity(container);
+            };
+        });
     }
 }
 

@@ -20,6 +20,10 @@ export class Kernel {
         this.scheduler = null;
         this.eventBus = null;
         this.permissions = null;
+
+        // Memory Management
+        this.totalMemory = (config.totalMemoryMB || 256) * 1024 * 1024;
+        this.usedMemory = 0;
     }
 
     /**
@@ -37,6 +41,10 @@ export class Kernel {
             
             // Initialize permission engine
             this.permissions = new PermissionEngine(this.config);
+
+            // Initialize integrity checker
+            const { IntegrityChecker } = await import('../security/integrity-checker.js');
+            this.integrity = new IntegrityChecker(this);
 
             // Set up global error handler
             this.setupErrorHandler();
@@ -81,10 +89,13 @@ export class Kernel {
             state: 'REGISTERED',
             createdAt: Date.now(),
             window: null,
-            suspended: false
+            suspended: false,
+            // Memory stats
+            memoryUsage: 0,
+            maxMemory: (this.config.defaultProcessMemoryMB || 32) * 1024 * 1024
         };
 
-        // Validate permissions
+        // Valid permissions check
         if (!this.permissions.validate(permissions)) {
             throw new Error(`Invalid permissions for process ${name}`);
         }
@@ -113,10 +124,56 @@ export class Kernel {
             process.window.destroy();
         }
 
+        // Return memory to system
+        if (process.memoryUsage > 0) {
+            this.usedMemory -= process.memoryUsage;
+        }
+
         this.processes.splice(processIndex, 1);
         this.emit('process:terminated', { pid, name: process.name });
 
         console.log(`[KERNEL] Process terminated: ${process.name} (PID: ${pid})`);
+    }
+
+    /**
+     * Allocate memory for a process
+     */
+    allocateMemory(pid, bytes) {
+        const process = this.getProcess(pid);
+        if (!process) return;
+
+        // Check process limit
+        if (process.memoryUsage + bytes > process.maxMemory) {
+            const error = new Error(`Out of Memory: Process ${process.name} exceeded limit of ${process.maxMemory} bytes`);
+            this.emit('process:error', { pid, error });
+            throw error;
+        }
+
+        // Check system limit
+        if (this.usedMemory + bytes > this.totalMemory) {
+            const error = new Error(`System Out of Memory`);
+            this.emit('system:error', { error });
+            throw error;
+        }
+
+        process.memoryUsage += bytes;
+        this.usedMemory += bytes;
+        
+        // Log large allocations
+        if (bytes > 1024 * 1024) {
+            console.log(`[KERNEL] Allocated ${(bytes/1024/1024).toFixed(2)}MB to ${process.name}`);
+        }
+    }
+
+    /**
+     * Free memory for a process
+     */
+    freeMemory(pid, bytes) {
+        const process = this.getProcess(pid);
+        if (!process) return;
+
+        process.memoryUsage = Math.max(0, process.memoryUsage - bytes);
+        this.usedMemory = Math.max(0, this.usedMemory - bytes);
     }
 
     /**

@@ -1,0 +1,530 @@
+/**
+ * Minesweeper
+ * Classic Windows XP style Minesweeper
+ */
+
+class Minesweeper {
+    constructor() {
+        this.windowManager = null;
+        this.windowId = null;
+        this.timerInterval = null;
+        this.time = 0;
+        this.mines = 10;
+        this.rows = 9;
+        this.cols = 9;
+        this.grid = [];
+        this.revealed = [];
+        this.flagged = [];
+        this.gameOver = false;
+        this.firstClick = true;
+        this.difficulty = 'beginner'; // beginner, intermediate, expert
+    }
+
+    /**
+     * Initialize
+     */
+    init(windowManager) {
+        this.windowManager = windowManager;
+    }
+
+    /**
+     * Open Minesweeper window
+     */
+    open() {
+        if (!this.windowManager) {
+            this.windowManager = window.RetroWeb.windowManager;
+        }
+
+        const win = this.windowManager.createWindow({
+            title: 'Minesweeper',
+            width: this.getWidthForDifficulty(),
+            height: this.getHeightForDifficulty(),
+            resizable: false,
+            content: this.createHTML(),
+            icon: '💣'
+        });
+
+        this.windowId = win.id;
+        this.setupEventListeners(win.id);
+        this.startGame();
+        
+        // Remove default padding for authentic look
+        const content = win.element.querySelector('.window-content');
+        if (content) {
+            content.style.padding = '0';
+            content.style.background = '#C0C0C0';
+        }
+
+        return win;
+    }
+
+    getWidthForDifficulty() {
+        switch(this.difficulty) {
+            case 'expert': return 620;
+            case 'intermediate': return 340;
+            default: return 200;
+        }
+    }
+
+    getHeightForDifficulty() {
+         switch(this.difficulty) {
+            case 'expert': return 420;
+            case 'intermediate': return 420;
+            default: return 280;
+        }
+    }
+
+    /**
+     * Create HTML Structure
+     */
+    createHTML() {
+        return `
+            <div class="minesweeper-container" style="
+                background: #C0C0C0; 
+                padding: 6px; 
+                display: flex; 
+                flex-direction: column; 
+                height: 100%; 
+                border-left: 2px solid white; 
+                border-top: 2px solid white; 
+                border-right: 2px solid #808080; 
+                border-bottom: 2px solid #808080;
+                box-sizing: border-box;
+                user-select: none;
+            ">
+                <!-- Header -->
+                <div class="ms-header" style="
+                    border-left: 2px solid #808080; 
+                    border-top: 2px solid #808080; 
+                    border-right: 2px solid white; 
+                    border-bottom: 2px solid white;
+                    padding: 4px;
+                    margin-bottom: 6px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background: #C0C0C0;
+                ">
+                    <!-- Link to digital font if possible, else fallback -->
+                    <div id="ms-mines-count" style="
+                        background: black; 
+                        color: red; 
+                        font-family: 'Consolas', monospace; 
+                        font-size: 22px; 
+                        padding: 0 4px;
+                        border: 1px solid #808080;
+                    ">010</div>
+                    
+                    <button id="ms-face-btn" style="
+                        width: 26px; 
+                        height: 26px; 
+                        font-size: 18px; 
+                        padding: 0;
+                        border: 2px solid white;
+                        border-right-color: #808080;
+                        border-bottom-color: #808080;
+                        background: #C0C0C0;
+                        cursor: pointer;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                    ">🙂</button>
+                    
+                    <div id="ms-timer" style="
+                        background: black; 
+                        color: red; 
+                        font-family: 'Consolas', monospace; 
+                        font-size: 22px; 
+                        padding: 0 4px;
+                        border: 1px solid #808080;
+                    ">000</div>
+                </div>
+
+                <!-- Grid -->
+                <div id="ms-grid" style="
+                    flex: 1;
+                    border-left: 3px solid #808080; 
+                    border-top: 3px solid #808080; 
+                    border-right: 3px solid white; 
+                    border-bottom: 3px solid white;
+                    display: grid;
+                    background: #808080;
+                ">
+                    <!-- Cells generated by JS -->
+                </div>
+            </div>
+            
+            <!-- Menu for difficulty -->
+            <div style="position:absolute; top:0; left:0; width:100%; height:20px; display:none;">
+               <!-- Not implementing top menu bar for now to keep it simple, 
+                    can cycle difficulty via context menu on header or face button long press? 
+                    Let's just use the face button to reset.
+                    To change difficulty, we might need a settings dialog.
+                    Let's add a simple context menu on the background.
+                -->
+            </div>
+        `;
+    }
+
+    setupEventListeners(windowId) {
+        const win = document.getElementById(windowId);
+        const faceBtn = win.querySelector('#ms-face-btn');
+        const container = win.querySelector('.minesweeper-container');
+
+        faceBtn.onclick = () => this.startGame();
+        
+        // Right click on container to show difficulty menu
+        container.oncontextmenu = (e) => {
+            if (e.target.classList.contains('ms-cell')) return; // Allow flagging
+            e.preventDefault();
+            this.showDifficultyMenu(e.clientX, e.clientY);
+        };
+    }
+
+    showDifficultyMenu(x, y) {
+        // reuse standard context menu logic if possible or create simple one
+        const menu = document.createElement('div');
+        menu.className = 'context-menu'; // System style
+        menu.style.left = x + 'px';
+        menu.style.top = y + 'px';
+        
+        const items = [
+            { label: 'Beginner', id: 'beginner' },
+            { label: 'Intermediate', id: 'intermediate' },
+            { label: 'Expert', id: 'expert' }
+        ];
+
+        items.forEach(item => {
+            const el = document.createElement('div');
+            el.className = 'context-menu-item';
+            el.textContent = (this.difficulty === item.id ? '✓ ' : '    ') + item.label;
+            el.onclick = () => {
+                this.setDifficulty(item.id);
+                menu.remove();
+            };
+            menu.appendChild(el);
+        });
+
+        document.body.appendChild(menu);
+        
+        const close = () => { menu.remove(); document.removeEventListener('click', close); };
+        setTimeout(() => document.addEventListener('click', close), 0);
+    }
+
+    setDifficulty(diff) {
+        this.difficulty = diff;
+        switch(diff) {
+            case 'beginner': this.rows = 9; this.cols = 9; this.mines = 10; break;
+            case 'intermediate': this.rows = 16; this.cols = 16; this.mines = 40; break;
+            case 'expert': this.rows = 16; this.cols = 30; this.mines = 99; break;
+        }
+        
+        // Resize window
+        const win = this.windowManager.windows.get(this.windowId);
+        if (win) {
+            // This is direct state manipulation, ideally use windowManager method
+            const el = document.getElementById(this.windowId);
+            el.style.width = this.getWidthForDifficulty() + 'px';
+            el.style.height = this.getHeightForDifficulty() + 'px';
+        }
+        
+        this.startGame();
+    }
+
+    startGame() {
+        this.grid = [];
+        this.revealed = [];
+        this.flagged = [];
+        this.gameOver = false;
+        this.firstClick = true;
+        this.time = 0;
+        this.stopTimer();
+        this.updateHeader();
+        this.renderGrid();
+        
+        // Reset face
+        const el = document.getElementById(this.windowId);
+        if (el) el.querySelector('#ms-face-btn').textContent = '🙂';
+    }
+
+    renderGrid() {
+        const el = document.getElementById(this.windowId);
+        if (!el) return;
+        
+        const gridEl = el.querySelector('#ms-grid');
+        gridEl.innerHTML = '';
+        gridEl.style.gridTemplateColumns = `repeat(${this.cols}, 1fr)`;
+        gridEl.style.gridTemplateRows = `repeat(${this.rows}, 1fr)`;
+        
+        for (let y = 0; y < this.rows; y++) {
+            for (let x = 0; x < this.cols; x++) {
+                const cell = document.createElement('div');
+                cell.className = 'ms-cell';
+                cell.dataset.x = x;
+                cell.dataset.y = y;
+                cell.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    background: #C0C0C0;
+                    border: 2px solid white;
+                    border-right-color: #808080;
+                    border-bottom-color: #808080;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    font-weight: bold;
+                    font-family: 'Tahoma', sans-serif;
+                    cursor: default;
+                    box-sizing: border-box;
+                    font-size: 11px;
+                `;
+                
+                // Events
+                cell.onmousedown = (e) => {
+                    if (this.gameOver) return;
+                    if (e.button === 0) {
+                        const face = el.querySelector('#ms-face-btn');
+                        if (face) face.textContent = '😮';
+                    }
+                };
+                
+                cell.onmouseup = (e) => {
+                    const face = el.querySelector('#ms-face-btn');
+                    if (!this.gameOver && face) face.textContent = '🙂';
+                    
+                    if (e.button === 0) this.handleClick(x, y);
+                    else if (e.button === 2) this.handleRightClick(x, y);
+                };
+
+                cell.oncontextmenu = (e) => e.preventDefault();
+                
+                gridEl.appendChild(cell);
+            }
+        }
+    }
+
+    generateMines(safeX, safeY) {
+        this.grid = Array(this.rows).fill(null).map(() => Array(this.cols).fill(0));
+        let minesPlaced = 0;
+        
+        while (minesPlaced < this.mines) {
+            const rx = Math.floor(Math.random() * this.cols);
+            const ry = Math.floor(Math.random() * this.rows);
+            
+            // Avoid safe zone (initial click and neighbors)
+            if (Math.abs(rx - safeX) <= 1 && Math.abs(ry - safeY) <= 1) continue;
+            
+            if (this.grid[ry][rx] !== 'M') {
+                this.grid[ry][rx] = 'M';
+                minesPlaced++;
+            }
+        }
+        
+        // Calculate numbers
+        for (let y = 0; y < this.rows; y++) {
+            for (let x = 0; x < this.cols; x++) {
+                if (this.grid[y][x] === 'M') continue;
+                let count = 0;
+                for (let dy = -1; dy <= 1; dy++) {
+                    for (let dx = -1; dx <= 1; dx++) {
+                        const ny = y + dy, nx = x + dx;
+                        if (ny >= 0 && ny < this.rows && nx >= 0 && nx < this.cols && this.grid[ny][nx] === 'M') {
+                            count++;
+                        }
+                    }
+                }
+                this.grid[y][x] = count;
+            }
+        }
+    }
+
+    handleClick(x, y) {
+        if (this.gameOver || this.flagged.includes(`${x},${y}`)) return;
+
+        if (this.firstClick) {
+            this.firstClick = false;
+            this.generateMines(x, y);
+            this.startTimer();
+        }
+
+        this.reveal(x, y);
+    }
+
+    handleRightClick(x, y) {
+        if (this.gameOver || this.revealed.includes(`${x},${y}`)) return;
+
+        const key = `${x},${y}`;
+        const idx = this.flagged.indexOf(key);
+        
+        if (idx === -1) {
+            this.flagged.push(key);
+        } else {
+            this.flagged.splice(idx, 1);
+        }
+        
+        this.updateCell(x, y);
+        this.updateHeader();
+    }
+
+    reveal(x, y) {
+        const key = `${x},${y}`;
+        if (this.revealed.includes(key) || this.flagged.includes(key)) return;
+
+        this.revealed.push(key);
+        this.updateCell(x, y);
+
+        const val = this.grid[y][x];
+
+        if (val === 'M') {
+            this.gameOver = true;
+            this.stopTimer();
+            this.revealAllMines();
+            
+            const el = document.getElementById(this.windowId);
+            if (el) el.querySelector('#ms-face-btn').textContent = '😵';
+            
+            // Mark exploded mine
+            const cell = this.getCellElement(x, y);
+            if (cell) cell.style.background = 'red';
+        } else if (val === 0) {
+            // Flood fill
+            for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                    const ny = y + dy, nx = x + dx;
+                    if (ny >= 0 && ny < this.rows && nx >= 0 && nx < this.cols) {
+                        this.reveal(nx, ny);
+                    }
+                }
+            }
+        }
+
+        if (!this.gameOver) this.checkWin();
+    }
+
+    updateCell(x, y) {
+        const cell = this.getCellElement(x, y);
+        if (!cell) return;
+        
+        const key = `${x},${y}`;
+        
+        if (this.revealed.includes(key)) {
+            cell.style.border = '1px solid #808080'; // subtle border
+            cell.style.borderTop = 'none'; // looks overly flat
+            // Authentic recessed look:
+            cell.style.border = '1px solid #808080'; 
+            cell.style.borderRightColor = 'none';
+            // Actually just standard css border inset?
+            
+            const val = this.grid[y][x];
+            if (val === 'M') {
+                cell.textContent = '💣';
+                cell.style.background = '#C0C0C0';
+            } else if (val > 0) {
+                cell.textContent = val;
+                cell.style.color = this.getNumberColor(val);
+                cell.style.background = '#C0C0C0';
+            } else {
+                cell.textContent = '';
+                cell.style.background = '#C0C0C0'; // Empty
+            }
+            // Pressed look
+             cell.style.border = 'none';
+             cell.style.boxShadow = 'inset 1px 1px 0px #808080';
+        } else if (this.flagged.includes(key)) {
+             cell.textContent = '🚩';
+        } else {
+             cell.textContent = '';
+             // Normal button look
+             cell.style.border = '2px solid white';
+            cell.style.borderRightColor = '#808080';
+            cell.style.borderBottomColor = '#808080';
+            cell.style.background = '#C0C0C0';
+            cell.style.boxShadow = 'none';
+        }
+    }
+
+    getNumberColor(n) {
+        const colors = ['blue', 'green', 'red', 'darkblue', 'brown', 'cyan', 'black', 'gray'];
+        return colors[n - 1] || 'black';
+    }
+
+    getCellElement(x, y) {
+        const el = document.getElementById(this.windowId);
+        if (!el) return null;
+        return el.querySelector(`.ms-cell[data-x="${x}"][data-y="${y}"]`);
+    }
+
+    revealAllMines() {
+        for (let y = 0; y < this.rows; y++) {
+            for (let x = 0; x < this.cols; x++) {
+                if (this.grid[y][x] === 'M') {
+                    const key = `${x},${y}`;
+                    if (!this.flagged.includes(key)) {
+                        this.revealed.push(key); // Force reveal
+                        this.updateCell(x, y);
+                    }
+                } else if (this.flagged.includes(`${x},${y}`)) {
+                    // Incorrect flag
+                    const cell = this.getCellElement(x, y);
+                    if (cell) {
+                        cell.textContent = '❌';
+                        cell.style.color = 'red';
+                    }
+                }
+            }
+        }
+    }
+
+    checkWin() {
+        // If all non-mine cells are revealed
+        const totalCells = this.rows * this.cols;
+        const totalSafe = totalCells - this.mines;
+        if (this.revealed.length === totalSafe) {
+             this.gameOver = true;
+             this.stopTimer();
+             const el = document.getElementById(this.windowId);
+             if (el) el.querySelector('#ms-face-btn').textContent = '😎';
+             this.flagAllMines();
+        }
+    }
+
+    flagAllMines() {
+        for (let y = 0; y < this.rows; y++) {
+            for (let x = 0; x < this.cols; x++) {
+                if (this.grid[y][x] === 'M') {
+                     const key = `${x},${y}`;
+                     if (!this.flagged.includes(key)) {
+                         this.flagged.push(key);
+                         this.updateCell(x, y);
+                     }
+                }
+            }
+        }
+        this.updateHeader();
+    }
+
+    updateHeader() {
+        const el = document.getElementById(this.windowId);
+        if (!el) return;
+        
+        const minesLeft = Math.max(0, this.mines - this.flagged.length);
+        const minesStr = minesLeft.toString().padStart(3, '0');
+        el.querySelector('#ms-mines-count').textContent = minesStr;
+    }
+
+    startTimer() {
+        this.stopTimer();
+        this.timerInterval = setInterval(() => {
+            this.time++;
+            if (this.time > 999) this.time = 999;
+            const el = document.getElementById(this.windowId);
+            if (el) el.querySelector('#ms-timer').textContent = this.time.toString().padStart(3, '0');
+        }, 1000);
+    }
+
+    stopTimer() {
+        if (this.timerInterval) clearInterval(this.timerInterval);
+    }
+}
+
+export const minesweeper = new Minesweeper();

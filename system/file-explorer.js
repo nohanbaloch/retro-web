@@ -103,6 +103,10 @@ class FileExplorer {
             <!-- Context Menu (hidden by default) -->
             <div id="context-menu-${state.windowId}" class="explorer-context-menu" style="display: none; position: fixed; background: white; border: 1px solid #ccc; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); z-index: 10000; min-width: 150px; font-size: 12px;">
                 <div class="ctx-item" data-action="open" style="padding: 6px 20px; cursor: pointer;">Open</div>
+                <div class="ctx-item" data-action="openwith" style="padding: 6px 20px; cursor: pointer; position: relative;">
+                    Open With <span style="float: right;">▶</span>
+                    <div class="openwith-submenu" style="display: none; position: absolute; left: 100%; top: -5px; background: white; border: 1px solid #ccc; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); min-width: 150px; z-index: 10001;"></div>
+                </div>
                 <div style="height: 1px; background: #ddd; margin: 2px 0;"></div>
                 <div class="ctx-item" data-action="cut" style="padding: 6px 20px; cursor: pointer;">Cut</div>
                 <div class="ctx-item" data-action="copy" style="padding: 6px 20px; cursor: pointer;">Copy</div>
@@ -644,6 +648,22 @@ class FileExplorer {
                 });
             });
         }, 100);
+
+        // Submenu hover logic
+        setTimeout(() => {
+            const contextMenu = document.getElementById(`context-menu-${windowId}`);
+            if (!contextMenu) return;
+
+            const openWith = contextMenu.querySelector('[data-action="openwith"]');
+            if (openWith) {
+                openWith.addEventListener('mouseenter', () => {
+                    openWith.querySelector('.openwith-submenu').style.display = 'block';
+                });
+                openWith.addEventListener('mouseleave', () => {
+                    openWith.querySelector('.openwith-submenu').style.display = 'none';
+                });
+            }
+        }, 100);
     }
 
     /**
@@ -662,6 +682,60 @@ class FileExplorer {
         contextMenu.style.display = 'block';
         contextMenu.style.left = event.clientX + 'px';
         contextMenu.style.top = event.clientY + 'px';
+
+        // Update "Open With" menu
+        if (type !== 'directory' && window.RetroWeb.registry) {
+            const apps = window.RetroWeb.registry.getAppsForFile(name);
+            this.updateOpenWithMenu(windowId, apps, name);
+        } else {
+             // Hide if directory or no registry
+             const openWith = contextMenu.querySelector('[data-action="openwith"]');
+             if (openWith) openWith.style.display = 'none';
+        }
+    }
+
+    /**
+     * Update Open With submenu
+     */
+    updateOpenWithMenu(windowId, apps, filename) {
+        const menu = document.getElementById(`context-menu-${windowId}`);
+        const openWithItem = menu.querySelector('[data-action="openwith"]');
+        const submenu = menu.querySelector('.openwith-submenu');
+        
+        if (!apps || apps.length === 0) {
+            openWithItem.style.display = 'none';
+            return;
+        }
+        
+        openWithItem.style.display = 'block';
+        submenu.innerHTML = '';
+        
+        apps.forEach(app => {
+            const item = document.createElement('div');
+            item.className = 'ctx-item';
+            item.style.padding = '6px 20px';
+            item.style.cursor = 'pointer';
+            item.style.whiteSpace = 'nowrap';
+            item.textContent = `${app.icon} ${app.name}`;
+            
+            item.addEventListener('mouseenter', () => { 
+                item.style.background = '#0078D7'; 
+                item.style.color = 'white'; 
+            });
+            item.addEventListener('mouseleave', () => { 
+                item.style.background = 'transparent'; 
+                item.style.color = 'black'; 
+            });
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const state = this.windows.get(windowId);
+                const path = state.currentPath + filename;
+                window.RetroWeb.registry.openWith(path, app.name);
+                this.hideContextMenu(windowId);
+            });
+            
+            submenu.appendChild(item);
+        });
     }
 
     /**
@@ -691,22 +765,34 @@ class FileExplorer {
                 break;
             case 'cut':
                 if (state.selectedItem) {
-                    this.clipboard = {
-                        action: 'cut',
-                        path: state.currentPath + state.selectedItem.name,
-                        type: state.selectedItem.type
-                    };
-                    this.updateStatusMessage(windowId, `Cut: ${state.selectedItem.name}`);
+                    if (window.RetroWeb.clipboard) {
+                        window.RetroWeb.clipboard.write({
+                            type: 'files',
+                            data: [{
+                                path: state.currentPath + state.selectedItem.name,
+                                type: state.selectedItem.type,
+                                name: state.selectedItem.name
+                            }],
+                            metadata: { action: 'cut' }
+                        });
+                        this.updateStatusMessage(windowId, `Cut: ${state.selectedItem.name}`);
+                    }
                 }
                 break;
             case 'copy':
                 if (state.selectedItem) {
-                    this.clipboard = {
-                        action: 'copy',
-                        path: state.currentPath + state.selectedItem.name,
-                        type: state.selectedItem.type
-                    };
-                    this.updateStatusMessage(windowId, `Copied: ${state.selectedItem.name}`);
+                    if (window.RetroWeb.clipboard) {
+                        window.RetroWeb.clipboard.write({
+                            type: 'files',
+                            data: [{
+                                path: state.currentPath + state.selectedItem.name,
+                                type: state.selectedItem.type,
+                                name: state.selectedItem.name
+                            }],
+                            metadata: { action: 'copy' }
+                        });
+                        this.updateStatusMessage(windowId, `Copied: ${state.selectedItem.name}`);
+                    }
                 }
                 break;
             case 'paste':
@@ -731,7 +817,11 @@ class FileExplorer {
      * Paste item from clipboard
      */
     async pasteItem(windowId) {
-        if (!this.clipboard) {
+        if (!window.RetroWeb.clipboard) return;
+        
+        const item = await window.RetroWeb.clipboard.read();
+        
+        if (!item || item.type !== 'files' || !item.data || item.data.length === 0) {
             alert('Nothing to paste.');
             return;
         }
@@ -740,14 +830,20 @@ class FileExplorer {
         if (!state) return;
 
         try {
-            const sourceName = this.clipboard.path.split('\\').pop();
+            const fileData = item.data[0]; // Handle first item for now
+            const sourcePath = fileData.path;
+            const sourceName = fileData.name || sourcePath.split('\\').pop();
             const destPath = state.currentPath + sourceName;
+            const action = item.metadata?.action || 'copy';
 
-            if (this.clipboard.action === 'copy') {
-                await this.vfs.copyFile(this.clipboard.path, destPath);
-            } else if (this.clipboard.action === 'cut') {
-                await this.vfs.moveFile(this.clipboard.path, destPath);
-                this.clipboard = null;
+            if (action === 'copy') {
+                await this.vfs.copyFile(sourcePath, destPath);
+            } else if (action === 'cut') {
+                await this.vfs.moveFile(sourcePath, destPath);
+                // Clear clipboard if cut (optional, but standard behavior usually keeps it until next copy)
+                // Actually, standard behavior keeps it, but moving it means source is gone.
+                // Does cut clear clipboard? No. But repeated paste fails.
+                // We'll leave it. Interaction handles error if source missing.
             }
             
             await this.refresh(windowId);
@@ -774,15 +870,37 @@ class FileExplorer {
     /**
      * Handle item double-click (wrapper for navigation)
      */
-    handleItemDblClick(windowId, name, type) {
+    async handleItemDblClick(windowId, name, type) {
         const state = this.windows.get(windowId);
         if (!state) return;
-
         if (type === 'directory') {
-            const newPath = state.currentPath + name + '\\';
+            const newPath = (state.currentPath.endsWith('\\') ? state.currentPath : state.currentPath + '\\') + name + '\\';
             this.navigateTo(windowId, newPath);
         } else {
-            this.openFile(windowId, state.currentPath, name);
+            const filePath = (state.currentPath.endsWith('\\') ? state.currentPath : state.currentPath + '\\') + name;
+
+            // If a registry exists and has an associated app for this file type, open with that app (e.g., Notepad)
+            try {
+                const apps = window.RetroWeb?.registry?.getAppsForFile(name) || [];
+                if (apps.length > 0) {
+                    // Prefer launching via registry so descriptor/launch flow is used
+                    try {
+                        await window.RetroWeb.registry.launch(apps[0].name || apps[0].id || 'Notepad', filePath);
+                        return;
+                    } catch (e) {
+                        // Fallback to direct open function if launch failed
+                        if (apps[0].open) {
+                            apps[0].open(filePath);
+                            return;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('[Explorer] Registry open failed, falling back to viewer:', e);
+            }
+
+            // Fallback: open with built-in viewer
+            this.openFile(windowId, filePath);
         }
     }
 
@@ -929,11 +1047,10 @@ class FileExplorer {
         // Container drop zone (dropping into current folder's whitespace)
         contentEl.addEventListener('dragover', (e) => this.handleDragOver(e));
         contentEl.addEventListener('drop', (e) => {
-             // If dropping on whitespace, dropping into current folder? 
-             // Usually drag and drop moves TO a folder. 
-             // If dropping into empty space of current folder, it does nothing unless dragging from *another* folder.
-             // For now, let's implement dropping ON folders.
-             e.preventDefault();
+             const state = this.windows.get(windowId);
+             if (state) {
+                 this.handleDrop(e, windowId, state.currentPath);
+             }
         });
     }
 

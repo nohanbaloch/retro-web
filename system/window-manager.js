@@ -88,6 +88,11 @@ class WindowManager {
 
         this.windows.push(windowObj);
         this.attachWindowEvents(windowObj);
+        // Notify kernel that a window was created so taskbar and other listeners can react
+        if (window.RetroWeb?.kernel) {
+            window.RetroWeb.kernel.emit('window:created', { windowId: windowObj.id, title, icon: (config.icon || '') });
+        }
+
         this.focus(windowId);
 
         return windowObj;

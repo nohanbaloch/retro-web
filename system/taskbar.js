@@ -127,7 +127,8 @@ class Taskbar {
                 if (window.RetroWeb?.explorer) window.RetroWeb.explorer.open('C:\\', 'My Computer');
                 break;
             case 'notepad':
-                if (window.RetroWeb?.notepad) window.RetroWeb.notepad.open();
+                if (window.RetroWeb?.registry) window.RetroWeb.registry.launch('Notepad');
+                else if (window.RetroWeb?.notepad) window.RetroWeb.notepad.open();
                 break;
             case 'browser':
                 // rudimentary or alert

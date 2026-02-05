@@ -14,6 +14,31 @@ export class Scheduler {
      * Schedule a process for execution
      */
     schedule(pid, task) {
+        // CPU Throttling Simulation
+        const process = this.kernel.getProcess(pid);
+        if (process) {
+            const now = Date.now();
+            const limit = this.kernel.config.cpuThrottleLimit || 100; // Ops per second
+            
+            // Reset counter if second has passed
+            if (!process.cpuStats || now - process.cpuStats.lastReset > 1000) {
+                process.cpuStats = { count: 0, lastReset: now };
+            }
+
+            process.cpuStats.count++;
+
+            // Throttle if limit exceeded
+            if (process.cpuStats.count > limit) {
+                const delay = this.kernel.config.cpuThrottleDelay || 50;
+                // Defer task
+                setTimeout(() => {
+                    this.queue.push({ pid, task, timestamp: Date.now() });
+                    if (!this.running) this.run();
+                }, delay);
+                return;
+            }
+        }
+
         this.queue.push({ pid, task, timestamp: Date.now() });
         
         if (!this.running) {

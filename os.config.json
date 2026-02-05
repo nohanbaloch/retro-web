@@ -16,7 +16,11 @@
     "maxProcesses": 64,
     "eventQueueSize": 1000,
     "debugMode": false,
-    "strictSandboxing": true
+    "strictSandboxing": true,
+    "totalMemoryMB": 256,
+    "defaultProcessMemoryMB": 32,
+    "cpuThrottleLimit": 100,
+    "cpuThrottleDelay": 50
   },
   "display": {
     "defaultTheme": "windows-xp",

@@ -122,6 +122,7 @@ class Bootloader {
     this.bootStage = "SERVICE_INIT";
 
     const services = [
+      "../system/clipboard.js",
       "../system/window-manager.js",
       "../system/desktop.js",
       "../system/taskbar.js",
@@ -129,8 +130,10 @@ class Bootloader {
       "../system/input-manager.js",
       "../system/notification-center.js",
       "../system/power-manager.js",
+      "../system/context-menu.js",
       "../services/settings.js",
       "../services/user-session.js",
+      "../services/registry.js",
     ];
 
     for (const servicePath of services) {
@@ -142,50 +145,128 @@ class Bootloader {
       }
     }
 
+
     // Initialize VFS separately with kernel reference
     try {
       const { VFS } = await import("../filesystem/vfs.js");
       window.RetroWeb.vfs = new VFS(window.RetroWeb.kernel);
       await window.RetroWeb.vfs.initialize();
       console.log("[BOOTLOADER] VFS initialized");
-      
+
       // Initialize File Explorer
       const { FileExplorer } = await import("../system/file-explorer.js");
       window.RetroWeb.explorer = new FileExplorer(
-        window.RetroWeb.windowManager,
-        window.RetroWeb.vfs
+      window.RetroWeb.windowManager,
+      window.RetroWeb.vfs
       );
       console.log("[BOOTLOADER] File Explorer initialized");
 
-      // Initialize built-in applications
+      // Initialize Control Panel as a system service
       try {
-        const { notepad } = await import("../apps/notepad.js");
-        notepad.init(window.RetroWeb.windowManager, window.RetroWeb.vfs);
-        window.RetroWeb.notepad = notepad;
-        console.log("[BOOTLOADER] Notepad initialized");
-
-        const { terminal } = await import("../apps/terminal.js");
-        terminal.init(window.RetroWeb.windowManager, window.RetroWeb.vfs);
-        window.RetroWeb.terminal = terminal;
-        console.log("[BOOTLOADER] Terminal initialized");
-
-        const { paint } = await import("../apps/paint.js");
-        paint.init(window.RetroWeb.windowManager, window.RetroWeb.vfs);
-        window.RetroWeb.paint = paint;
-        console.log("[BOOTLOADER] Paint initialized");
-        
-        const { controlPanel } = await import("../apps/control-panel.js");
-        controlPanel.init(window.RetroWeb.windowManager, window.RetroWeb.vfs);
-        window.RetroWeb.controlPanel = controlPanel;
-        console.log("[BOOTLOADER] Control Panel initialized");
-
-        const { calculator } = await import("../apps/calculator.js");
-        calculator.init(window.RetroWeb.windowManager);
-        window.RetroWeb.calculator = calculator;
-        console.log("[BOOTLOADER] Calculator initialized");
-      } catch (error) {
-        console.warn("[BOOTLOADER] Some apps failed to load:", error);
+      const { controlPanel } = await import("../apps/control-panel.js");
+      if (controlPanel && typeof controlPanel.init === 'function') {
+        await controlPanel.init(window.RetroWeb.windowManager, window.RetroWeb.vfs);
       }
+      window.RetroWeb.controlPanel = controlPanel;
+      console.log("[BOOTLOADER] Control Panel initialized as system service");
+      } catch (error) {
+      console.error("[BOOTLOADER] Control Panel failed to load as system service:", error);
+      }
+
+      // Initialize built-in applications (other than Control Panel)
+      const { Sandbox } = await import("../security/sandbox.js");
+
+      const initApp = async (name, importPath, config = {}) => {
+        try {
+          const module = await import(importPath);
+          const globalName = config.globalName || name.toLowerCase();
+          let app = module[globalName]; 
+          // Fallback: search for an export that looks like an app instance
+          if (!app) {
+            for (const key of Object.keys(module)) {
+               const candidate = module[key];
+               if (candidate && typeof candidate === 'object' && typeof candidate.init === 'function') {
+                 app = candidate;
+                 break;
+               }
+            }
+          }
+          // Fallback: Use first export (legacy behavior, but dangerous)
+          if (!app) {
+            app = module[Object.keys(module)[0]];
+          }
+          if (!app) throw new Error('No valid application instance found in module');
+          // Register process
+          const process = window.RetroWeb.kernel.createProcess({
+            name: config.title || name,
+            type: 'system',
+            permissions: config.permissions || []
+          });
+          // Create Sandbox
+          const sandbox = new Sandbox(window.RetroWeb.kernel, process.pid);
+          // Init app with sandboxed services
+          if (app.init) {
+            await app.init(sandbox.windowManager, sandbox.fileSystem);
+          }
+          // Store reference (legacy/global access)
+          window.RetroWeb[globalName] = app;
+          console.log(`[BOOTLOADER] ${name} initialized (PID: ${process.pid})`);
+        } catch (error) {
+          console.error(`[BOOTLOADER] ${name} failed to load. Details:`, error);
+          // Fallback: Try to register globally anyway so it might partially work/be debuggable
+          try {
+            const module = await import(importPath);
+            const app = module[config.globalName || name.toLowerCase()] || module[Object.keys(module)[0]];
+            if (app) window.RetroWeb[config.globalName || name.toLowerCase()] = app;
+          } catch (e) { console.error('Fallback failed', e); }
+        }
+      };
+
+        // Register app descriptors (lazy-load on demand)
+        if (window.RetroWeb?.registry) {
+        window.RetroWeb.registry.registerDescriptor('Notepad', {
+          importPath: '../apps/notepad.js',
+          globalName: 'notepad',
+          title: 'Notepad',
+          permissions: ['filesystem:read', 'filesystem:write']
+        });
+
+        window.RetroWeb.registry.registerDescriptor('Terminal', {
+          importPath: '../apps/terminal.js',
+          globalName: 'terminal',
+          title: 'Terminal',
+          permissions: ['filesystem:read', 'filesystem:write', 'filesystem:delete', 'processes:create', 'processes:kill']
+        });
+
+        window.RetroWeb.registry.registerDescriptor('Paint', {
+          importPath: '../apps/paint.js',
+          globalName: 'paint',
+          title: 'Paint',
+          permissions: ['filesystem:read', 'filesystem:write']
+        });
+
+
+        window.RetroWeb.registry.registerDescriptor('Calculator', {
+          importPath: '../apps/calculator.js',
+          globalName: 'calculator',
+          title: 'Calculator',
+          permissions: []
+        });
+
+        window.RetroWeb.registry.registerDescriptor('Minesweeper', {
+          importPath: '../apps/minesweeper.js',
+          globalName: 'minesweeper',
+          title: 'Minesweeper',
+          permissions: []
+        });
+
+        window.RetroWeb.registry.registerDescriptor('Solitaire', {
+          importPath: '../apps/solitaire.js',
+          globalName: 'solitaire',
+          title: 'Solitaire',
+          permissions: []
+        });
+        }
     } catch (error) {
       console.error("[BOOTLOADER] VFS initialization failed:", error);
       throw new Error("Virtual filesystem initialization failed: " + error.message);

@@ -112,6 +112,16 @@
 - ✅ **Paint** - Full drawing application with tools and VFS support
 - ✅ **Control Panel** - System settings, themes, and user configuration
 - ✅ **Calculator** - Basic arithmetic and memory functions
+- ✅ **Minesweeper** - Classic Windows puzzle game with difficulty levels
+- ✅ **Solitaire** - Klondike Solitaire card game with drag-and-drop
+- ✅ **Registry Editor** - Manage file associations and system settings (Internal Service)
+
+### 🚀 Phase 5: Advanced Features (Latest)
+
+- ✅ **Clipboard System** - Copy/Paste support for text and files, including cross-app integration
+- ✅ **Drag & Drop** - Drag files to/from Desktop and Explorer, specific drop zones, and icon rearrangement
+- ✅ **Notification Center** - Toast notifications, alerts, and action queues
+- ✅ **Desktop Advanced** - Drag to rearrange icons, "Open With" context menus, and shortcut creation
 
 ---
 
@@ -185,38 +195,15 @@ Then navigate to `http://localhost:8080` in your browser.
 
 ## 🎯 Roadmap
 
-<table>
-<tr>
-<td align="center">✅</td>
-<td><strong>Phase 1</strong></td>
-<td>Foundation & Boot System</td>
-<td><em>Complete</em></td>
-</tr>
-<tr>
-<td align="center">✅</td>
-<td><strong>Phase 2</strong></td>
-<td>Desktop Environment</td>
-<td><em>Complete</em></td>
-</tr>
-<tr>
-<td align="center">✅</td>
-<td><strong>Phase 3</strong></td>
-<td>Virtual Filesystem</td>
-<td><em>Complete</em></td>
-</tr>
-<tr>
-<td align="center">✅</td>
-<td><strong>Phase 4</strong></td>
-<td>Built-in Applications</td>
-<td><em>Complete</em></td>
-</tr>
-<tr>
-<td align="center">🚧</td>
-<td><strong>Phase 5</strong></td>
-<td>Advanced Features</td>
-<td><em>In Progress</em></td>
-</tr>
-</table>
+| Status | Phase | Description | State |
+|:---:|:---|:---|:---|
+| ✅ | **Phase 1** | Foundation & Boot System | *Complete* |
+| ✅ | **Phase 2** | Desktop Environment | *Complete* |
+| ✅ | **Phase 3** | Virtual Filesystem | *Complete* |
+| ✅ | **Phase 4** | Built-in Applications | *Complete* |
+| ✅ | **Phase 5** | Advanced Features | *Complete* |
+| ✅ | **Phase 6** | Security & Sandboxing | *Complete* |
+| 🚧 | **Phase 7** | Plugin System | *Next* |
 
 ---
 
@@ -240,9 +227,9 @@ Then navigate to `http://localhost:8080` in your browser.
 
 ### Code Statistics
 
-- **Total Files**: 20+ core files
-- **Lines of Code**: ~3,500+
-- **Components**: 10+ major systems
+- **Total Files**: 35+ core files
+- **Lines of Code**: ~5,500+
+- **Components**: 15+ major systems
 - **Visual Fidelity**: 100% Windows XP authentic
 
 ---
@@ -258,7 +245,7 @@ Then navigate to `http://localhost:8080` in your browser.
 ### Browser Compatibility
 
 | Browser | Status |
-|---------|--------|
+| --------- | -------- |
 | Chrome/Edge | ✅ Fully Supported |
 | Firefox | ✅ Fully Supported |
 | Safari | ⚠️ Mostly Supported |
@@ -318,6 +305,6 @@ If you like this project, please consider giving it a ⭐ on GitHub!
 
 ---
 
-*Built with ❤️ and nostalgia for Windows XP*
+**Built with ❤️ and nostalgia for Windows XP**
 
 </div>

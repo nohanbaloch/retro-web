@@ -51,7 +51,11 @@ class Paint {
             console.error('[Paint] WindowManager not initialized');
             return;
         }
-
+        // Prevent duplicate window: if already open, focus and return
+        if (this.windowId && document.getElementById(this.windowId)) {
+            this.windowManager.focusWindow(this.windowId);
+            return;
+        }
         const win = this.windowManager.createWindow({
             title: 'Untitled - Paint',
             width: 850,
@@ -60,22 +64,17 @@ class Paint {
             y: 50 + Math.random() * 40,
             content: this.createPaintHTML()
         });
-
         this.windowId = win.id;
-        
         // Remove default padding
         const contentArea = win.element.querySelector('.window-content');
         if (contentArea) {
             contentArea.style.padding = '0';
             contentArea.style.overflow = 'hidden';
         }
-
         // Initialize canvas
         this.initCanvas(win.id);
-        
         // Set up event listeners
         this.setupEventListeners(win.id);
-
         return win;
     }
 
