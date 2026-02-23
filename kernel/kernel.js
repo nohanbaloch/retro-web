@@ -69,7 +69,7 @@ export class Kernel {
      * Create a new process
      */
     createProcess(processConfig) {
-        const { name, executable, permissions = [], memory = {} } = processConfig;
+        const { name, executable, permissions = [], memory = {}, type = 'user' } = processConfig;
 
         // Check process limit
         if (this.processes.length >= this.config.maxProcesses) {
@@ -86,9 +86,10 @@ export class Kernel {
             executable,
             permissions,
             memory,
+            type,
             state: 'REGISTERED',
             createdAt: Date.now(),
-            window: null,
+            windowId: null,
             suspended: false,
             // Memory stats
             memoryUsage: 0,

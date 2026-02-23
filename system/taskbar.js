@@ -212,6 +212,17 @@ class Taskbar {
             this.handleWindowButtonClick(windowId);
         });
 
+        // Context menu handler
+        button.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            if (window.RetroWeb?.contextMenu) {
+                const menuConfig = window.RetroWeb.contextMenu.getTaskbarMenu();
+                window.RetroWeb.contextMenu.showMenu(menuConfig, e.clientX, e.clientY, {
+                    windowId: windowId
+                });
+            }
+        });
+
         windowArea.appendChild(button);
         this.windowButtons.set(windowId, button);
     }

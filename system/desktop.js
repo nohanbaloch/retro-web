@@ -229,7 +229,14 @@ class Desktop {
             e.preventDefault();
             e.stopPropagation();
             this.selectIcon(iconElement, false); // Select on right click
-            this.showIconContextMenu(e.clientX, e.clientY, iconData);
+            if (window.RetroWeb?.contextMenu) {
+                const menuConfig = window.RetroWeb.contextMenu.getFileMenu(iconData.type);
+                window.RetroWeb.contextMenu.showMenu(menuConfig, e.clientX, e.clientY, {
+                    path: iconData.path,
+                    type: iconData.type,
+                    name: iconData.name
+                });
+            }
         });
 
         // Draggable
@@ -342,10 +349,18 @@ class Desktop {
      * Attach event listeners
      */
     attachEventListeners() {
-        // Desktop context menu
-        this.container.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            this.showDesktopContextMenu(e.clientX, e.clientY);
+        // Desktop context menu - listen on document for desktop area
+        document.addEventListener('contextmenu', (e) => {
+            if (e.target === this.container || this.container.contains(e.target)) {
+                // Only show if not clicking on an icon
+                if (!e.target.closest('.desktop-icon')) {
+                    e.preventDefault();
+                    if (window.RetroWeb?.contextMenu) {
+                        const menuConfig = window.RetroWeb.contextMenu.getDesktopMenu();
+                        window.RetroWeb.contextMenu.showMenu(menuConfig, e.clientX, e.clientY, {});
+                    }
+                }
+            }
         });
         
         // Remove context menu on click
@@ -454,129 +469,6 @@ class Desktop {
     }
 
     /**
-     * Show Desktop Context Menu
-     */
-    showDesktopContextMenu(x, y) {
-        const items = [
-            { label: 'Refresh', action: () => this.refresh() },
-            { separator: true },
-            { label: 'New Folder', action: () => this.createNewItem('folder') },
-            { label: 'New Text Document', action: () => this.createNewItem('file') },
-            { separator: true },
-            { label: 'Properties', action: () => this.showProperties() }
-        ];
-        this.renderContextMenu(x, y, items);
-    }
-
-    /**
-     * Show Icon Context Menu
-     */
-    showIconContextMenu(x, y, iconData) {
-        const items = [
-            { label: 'Open', action: () => this.handleIconAction(iconData.action, iconData.name, iconData.icon, iconData.path, iconData.type, iconData.shortcutAction) }
-        ];
-
-        // Open With
-        if (iconData.path && iconData.type !== 'directory' && window.RetroWeb?.registry) {
-            const apps = window.RetroWeb.registry.getAppsForFile(iconData.name);
-            if (apps.length > 0) {
-                items.push({
-                    label: 'Open With ▶',
-                    submenu: apps.map(app => ({
-                        label: `${app.icon} ${app.name}`,
-                        action: () => window.RetroWeb.registry.openWith(iconData.path, app.name)
-                    }))
-                });
-            }
-        }
-
-        items.push(
-            { separator: true },
-            { label: 'Delete', action: () => this.deleteItem(iconData) },
-            { label: 'Rename', action: () => this.renameItem(iconData) },
-            { separator: true },
-            { label: 'Properties', action: () => alert(`Properties: ${iconData.name}`) }
-        );
-
-        // Filter for system icons (cannot delete My Computer easily here without hiding)
-        if (!iconData.path) {
-            // System icon - remove Delete/Rename
-            // Index 0 is Open, 1 is OpenWith(maybe), 2 is Sep, 3 is Delete...
-            // Simpler: Just filter items that have actions Delete/Rename
-            // But we just constructed it.
-            // Let's just rebuild carefully or filter.
-            // Filter out Delete/Rename by label
-            const protectedLabels = ['Delete', 'Rename'];
-            const filtered = items.filter(i => !protectedLabels.includes(i.label));
-            this.renderContextMenu(x, y, filtered);
-        } else {
-             this.renderContextMenu(x, y, items);
-        }
-    }
-
-    /**
-     * Render Context Menu DOM
-     */
-    renderContextMenu(x, y, items) {
-        // Remove existing
-        const existing = document.querySelector('.context-menu');
-        if (existing) existing.remove();
-
-        const menu = document.createElement('div');
-        menu.className = 'context-menu';
-        menu.style.left = `${x}px`;
-        menu.style.top = `${y}px`;
-
-        items.forEach(item => {
-            if (item.separator) {
-                const sep = document.createElement('div');
-                sep.className = 'context-menu-separator';
-                menu.appendChild(sep);
-            } else {
-                const el = document.createElement('div');
-                el.className = 'context-menu-item';
-                el.textContent = item.label;
-                
-                if (item.submenu) {
-                    el.style.position = 'relative';
-                    const submenu = document.createElement('div');
-                    submenu.className = 'context-menu'; // reuse style
-                    submenu.style.left = '100%';
-                    submenu.style.top = '-5px';
-                    submenu.style.display = 'none';
-                    submenu.style.minWidth = '150px';
-                    
-                    item.submenu.forEach(subItem => {
-                        const subEl = document.createElement('div');
-                        subEl.className = 'context-menu-item';
-                        subEl.textContent = subItem.label;
-                        subEl.addEventListener('click', (e) => {
-                             e.stopPropagation();
-                             menu.remove();
-                             if (subItem.action) subItem.action();
-                        });
-                        submenu.appendChild(subEl);
-                    });
-                    
-                    el.appendChild(submenu);
-                    el.addEventListener('mouseenter', () => submenu.style.display = 'block');
-                    el.addEventListener('mouseleave', () => submenu.style.display = 'none');
-                } else {
-                    el.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        menu.remove();
-                        if (item.action) item.action();
-                    });
-                }
-                
-                menu.appendChild(el);
-            }
-        });
-
-        document.body.appendChild(menu);
-    }
-
-    /**
      * Create New Item
      */
     async createNewItem(type) {
@@ -632,6 +524,49 @@ class Desktop {
     showProperties() {
         if (window.RetroWeb?.controlPanel) {
             window.RetroWeb.controlPanel.open();
+        }
+    }
+
+    /**
+     * Create new folder
+     */
+    async createNewFolder() {
+        await this.createNewItem('folder');
+    }
+
+    /**
+     * Create new text file
+     */
+    async createNewTextFile() {
+        await this.createNewItem('file');
+    }
+
+    /**
+     * Create new shortcut
+     */
+    async createNewShortcut() {
+        const desktopPath = 'C:\\Documents and Settings\\User\\Desktop';
+        const vfs = window.RetroWeb?.vfs;
+        if (!vfs) return;
+
+        const name = prompt('Shortcut Name:', 'New Shortcut');
+        if (!name) return;
+
+        try {
+            const fileName = `${name}.lnk`;
+            const fullPath = `${desktopPath}\\${fileName}`;
+
+            const shortcutData = {
+                type: 'shortcut',
+                name: name,
+                action: 'custom', // Could be expanded to allow choosing what to shortcut to
+                icon: '🔗'
+            };
+
+            await vfs.createFile(fullPath, JSON.stringify(shortcutData, null, 2));
+            await this.refresh();
+        } catch (err) {
+            alert(`Failed to create shortcut: ${err.message}`);
         }
     }
 }

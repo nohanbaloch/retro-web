@@ -184,6 +184,7 @@ class StartMenu {
       { name: "My Computer", icon: "💻", action: "mycomputer" },
       { name: "My Documents", icon: "📄", action: "mydocuments" },
       { name: "Control Panel", icon: "⚙️", action: "controlpanel" },
+      { name: "Task Manager", icon: "📊", action: "taskmanager" },
       { separator: true },
       { name: "GitHub", icon: "🐙", action: "github" },
       { name: "Search", icon: "🔍", action: "search" },
@@ -280,66 +281,16 @@ class StartMenu {
     // Context menu handler
     menuItem.addEventListener("contextmenu", (e) => {
       e.preventDefault();
-      this.showContextMenu(e.clientX, e.clientY, item);
+      if (window.RetroWeb?.contextMenu) {
+        const menuConfig = window.RetroWeb.contextMenu.getStartMenuItem();
+        window.RetroWeb.contextMenu.showMenu(menuConfig, e.clientX, e.clientY, {
+          appName: item.name,
+          item: item
+        });
+      }
     });
 
     return menuItem;
-  }
-
-  /**
-   * Show context menu for start menu item
-   */
-  showContextMenu(x, y, item) {
-    // Remove existing context menus
-    const existing = document.querySelector(".start-context-menu");
-    if (existing) existing.remove();
-
-    const menu = document.createElement("div");
-    menu.className = "start-context-menu";
-    menu.style.cssText = `
-            position: fixed;
-            left: ${x}px;
-            top: ${y}px;
-            background: white;
-            border: 1px solid #ccc;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-            z-index: 10002;
-            padding: 2px;
-            min-width: 150px;
-            font-family: 'Tahoma', sans-serif;
-            font-size: 11px;
-        `;
-
-    const actionItem = document.createElement("div");
-    actionItem.textContent = "Create Shortcut";
-    actionItem.style.cssText = `
-            padding: 4px 12px;
-            cursor: pointer;
-        `;
-    actionItem.onmouseenter = () => {
-      actionItem.style.background = "#0078D7";
-      actionItem.style.color = "white";
-    };
-    actionItem.onmouseleave = () => {
-      actionItem.style.background = "transparent";
-      actionItem.style.color = "black";
-    };
-    actionItem.onclick = () => {
-      this.createDesktopShortcut(item);
-      menu.remove();
-    };
-
-    menu.appendChild(actionItem);
-    document.body.appendChild(menu);
-
-    // Close on click elsewhere
-    const closeHandler = (e) => {
-      if (!menu.contains(e.target)) {
-        menu.remove();
-        document.removeEventListener("click", closeHandler);
-      }
-    };
-    setTimeout(() => document.addEventListener("click", closeHandler), 0);
   }
 
   /**
@@ -609,6 +560,11 @@ class StartMenu {
         break;
       case "controlpanel":
         this.launchApp("Control Panel", "⚙️");
+        break;
+      case "taskmanager":
+        if (window.RetroWeb?.taskManager) {
+          window.RetroWeb.taskManager.open();
+        }
         break;
       case "github":
         window.open("https://github.com/nohanbaloch/retro-web", "_blank");

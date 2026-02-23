@@ -4,8 +4,8 @@
 
 ### *A Nostalgic Journey Back to Windows XP*
 
-[![Version](https://img.shields.io/badge/version-0.4.0-blue.svg)](https://github.com/nohanbaloch/retro-web)
-[![Phase](https://img.shields.io/badge/phase-5%20in%20progress-yellow.svg)](https://github.com/nohanbaloch/retro-web)
+[![Version](https://img.shields.io/badge/version-0.5.0-blue.svg)](https://github.com/nohanbaloch/retro-web)
+[![Phase](https://img.shields.io/badge/phase-6%20in%20progress-yellow.svg)](https://github.com/nohanbaloch/retro-web)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![JavaScript](https://img.shields.io/badge/javascript-vanilla-yellow.svg)](https://github.com/nohanbaloch/retro-web)
 
@@ -21,7 +21,7 @@
 
 <div align="center">
 
-![Retro Web OS Screenshot](screenshot/retro-web-os.png)
+![Retro Web OS Screenshot](screenshot/retro-web-os-1.png)
 *Experience the authentic Windows XP interface in your browser*
 
 </div>
@@ -116,8 +116,9 @@
 - ✅ **Solitaire** - Klondike Solitaire card game with drag-and-drop
 - ✅ **Registry Editor** - Manage file associations and system settings (Internal Service)
 
-### 🚀 Phase 5: Advanced Features (Latest)
+### 🚀 Phase 5: Advanced Features ✅ **COMPLETE**
 
+- ✅ **Task Manager** - Windows XP-style process monitor with CPU/Memory charts, process control, and system performance
 - ✅ **Clipboard System** - Copy/Paste support for text and files, including cross-app integration
 - ✅ **Drag & Drop** - Drag files to/from Desktop and Explorer, specific drop zones, and icon rearrangement
 - ✅ **Notification Center** - Toast notifications, alerts, and action queues
@@ -203,7 +204,7 @@ Then navigate to `http://localhost:8080` in your browser.
 | ✅ | **Phase 4** | Built-in Applications | *Complete* |
 | ✅ | **Phase 5** | Advanced Features | *Complete* |
 | ✅ | **Phase 6** | Security & Sandboxing | *Complete* |
-| 🚧 | **Phase 7** | Plugin System | *Next* |
+| 🚧 | **Phase 7** | Plugin System | *In Progress* |
 
 ---
 
@@ -227,9 +228,9 @@ Then navigate to `http://localhost:8080` in your browser.
 
 ### Code Statistics
 
-- **Total Files**: 35+ core files
-- **Lines of Code**: ~5,500+
-- **Components**: 15+ major systems
+- **Total Files**: 36+ core files
+- **Lines of Code**: ~6,000+
+- **Components**: 16+ major systems
 - **Visual Fidelity**: 100% Windows XP authentic
 
 ---
