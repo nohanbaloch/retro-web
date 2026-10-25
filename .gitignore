@@ -1,5 +1,8 @@
 # Ignore Copilot helper files
 copilot/
+node_modules/
+dist/
+
 # Retro Web OS - Git Ignore File
 
 # ============================================
